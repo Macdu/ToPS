@@ -10,6 +10,7 @@ class VulkanRenderer;
 // A class containing everything related to rendering the PS framebuffer to renderImage
 class SceneRendering {
 public:
+	static const vk::Format surfaceFormat = vk::Format::eA1R5G5B5UnormPack16;
 
 	VulkanRenderer* renderer;
 	vk::Device device;

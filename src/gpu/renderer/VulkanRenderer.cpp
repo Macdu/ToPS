@@ -358,14 +358,14 @@ void VulkanRenderer::createSyncObjects()
 }
 
 void VulkanRenderer::createImage(vk::Image & image, vk::DeviceMemory & memory,
-	vk::ImageUsageFlags usage)
+	vk::ImageUsageFlags usage, vk::Format format)
 {
 	vk::ImageCreateInfo imageInfo{};
 	imageInfo
 		.setImageType(vk::ImageType::e2D)
 		.setMipLevels(1)
 		.setArrayLayers(1)
-		.setFormat(swapChainImageFormat)
+		.setFormat(format)
 		.setTiling(vk::ImageTiling::eOptimal)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setUsage(usage)

@@ -39,7 +39,7 @@ void SceneRendering::createRenderPass()
 {
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
-		.setFormat(renderer->swapChainImageFormat)
+		.setFormat(surfaceFormat)
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eLoad)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -208,16 +208,18 @@ void SceneRendering::createRenderImage()
 {
 	// we will read from this image in the shader and copy the renderimage to it
 	renderer->createImage(readImage, readImageMemory,
-		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled);
+		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		surfaceFormat);
 	// transition the image from undefined to shaderreadonly
-	renderer->startupImageTransition(readImage, renderer->swapChainImageFormat,
+	renderer->startupImageTransition(readImage, surfaceFormat,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
 	renderer->createImage(renderImage, renderImageMemory,
-		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment);
+		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment,
+		surfaceFormat);
 	// transition the image from undefined to transferdst
-	renderer->startupImageTransition(renderImage, renderer->swapChainImageFormat,
+	renderer->startupImageTransition(renderImage, surfaceFormat,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferSrcOptimal);
 
 	// create the image view and framebuffer for the renderImage and readImage
@@ -225,7 +227,7 @@ void SceneRendering::createRenderImage()
 	imageViewCreateInfo
 		.setImage(renderImage)
 		.setViewType(vk::ImageViewType::e2D)
-		.setFormat(renderer->swapChainImageFormat);
+		.setFormat(surfaceFormat);
 	imageViewCreateInfo.subresourceRange
 		.setAspectMask(vk::ImageAspectFlagBits::eColor)
 		.setBaseMipLevel(0)
@@ -348,7 +350,7 @@ void SceneRendering::createCopyCmdBuffer()
 	copyRenderToReadCmdBuffer.begin(beginInfo);
 	// set the image from sampled to transferdst
 	// previous content is now useless
-	renderer->makeTransitionImageLayoutCmd(readImage, renderer->swapChainImageFormat,
+	renderer->makeTransitionImageLayoutCmd(readImage, surfaceFormat,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 		copyRenderToReadCmdBuffer, vk::CommandBufferUsageFlags(), false);
 
@@ -372,7 +374,7 @@ void SceneRendering::createCopyCmdBuffer()
 		readImage, vk::ImageLayout::eTransferDstOptimal, imageCopy);
 
 	// switch back the image to shader_read
-	renderer->makeTransitionImageLayoutCmd(readImage, renderer->swapChainImageFormat,
+	renderer->makeTransitionImageLayoutCmd(readImage, surfaceFormat,
 		vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
 		copyRenderToReadCmdBuffer, vk::CommandBufferUsageFlags(), false);
 	copyRenderToReadCmdBuffer.end();

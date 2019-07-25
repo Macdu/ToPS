@@ -365,13 +365,13 @@ void GPU::shaded4points()
 	vertices[2] = readPoint();
 	colors[3] = readColor();
 	vertices[3] = readPoint();
-	
-	for (int i = 0; i < 3; i++) {
-		pushVertex(vertices[i], colors[i]);
-	}
-	for (int i = 1; i < 4; i++) {
-		pushVertex(vertices[i], colors[i]);
-	}
+
+	pushVertex(vertices[0], colors[0]);
+	pushVertex(vertices[1], colors[1]);
+	pushVertex(vertices[3], colors[3]);
+	pushVertex(vertices[0], colors[0]);
+	pushVertex(vertices[3], colors[3]);
+	pushVertex(vertices[2], colors[2]);
 	printf("Draw shaded 4-points\n");
 }
 

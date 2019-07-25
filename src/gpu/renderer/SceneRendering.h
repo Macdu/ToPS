@@ -22,8 +22,12 @@ public:
 	vk::Buffer vertexBuffer;
 	vk::DeviceMemory vertexBufferMemory;
 
+	vk::Buffer stagingBuffer;
+	vk::DeviceMemory stagingBufferMemory;
+
 	vk::CommandPool commandPool;
-	vk::CommandBuffer renderCommand;
+	vk::CommandBuffer renderCmd;
+	vk::CommandBuffer copyStagingCmd;
 
 	// The image containing the current PSX framebuffer
 	vk::Image readImage;
@@ -40,10 +44,11 @@ public:
 	vk::DescriptorPool descriptorPool;
 	vk::DescriptorSet descriptorSet;
 
-	const int maxVerticesPerFrame = 100000;
+	static const int maxVerticesPerFrame = 100000;
 
 	// store the current vertices before they are rendered
-	std::vector<VulkanVertex> verticesToRender;
+	VulkanVertex verticesToRender[maxVerticesPerFrame];
+	int verticesToRenderSize = 0;
 
 	vk::Fence renderFence;
 	vk::Semaphore verticesRenderedSemaphore;
@@ -58,13 +63,16 @@ public:
 	void createCommandPool();
 	void createRenderImage();
 	void createSyncObjects();
-	void createVertexBuffer();
+	void createBuffers();
 	void createCopyCmdBuffer();
 	void createDescriptors();
 
 	void makeRenderCmdBuffer();
 	void copyVertices();
 	void renderVertices();
+
+	// transfer an image from DMA to the framebuffer
+	void transferImage(u16* image, Point<i16> topLeft, Point<i16> extent);
 
 	void destroy();
 

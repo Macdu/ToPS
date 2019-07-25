@@ -41,11 +41,11 @@ void SceneRendering::createRenderPass()
 	colorAttachment
 		.setFormat(surfaceFormat)
 		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eLoad)
+		.setLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eTransferSrcOptimal)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::eTransferSrcOptimal);
 
 	vk::AttachmentReference colorAttachmentReference{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -198,10 +198,12 @@ void SceneRendering::createCommandPool()
 	vk::CommandBufferAllocateInfo allocInfo{
 		commandPool,
 		vk::CommandBufferLevel::ePrimary,
-		1
+		2
 	};
 
-	renderCommand = device.allocateCommandBuffers(allocInfo).front();
+	auto cmds = device.allocateCommandBuffers(allocInfo);
+	renderCmd = cmds[0];
+	copyStagingCmd = cmds[1];
 }
 
 void SceneRendering::createRenderImage()
@@ -277,12 +279,17 @@ void SceneRendering::createSyncObjects()
 	copyToReadImgReady = device.createSemaphore({});
 }
 
-void SceneRendering::createVertexBuffer()
+void SceneRendering::createBuffers()
 {
-	vk::DeviceSize bufferSize = sizeof(VulkanVertex)*maxVerticesPerFrame;
-	renderer->createBuffer(bufferSize, vk::BufferUsageFlagBits::eVertexBuffer,
+	vk::DeviceSize vertexBufferSize = sizeof(VulkanVertex)*maxVerticesPerFrame;
+	renderer->createBuffer(vertexBufferSize, vk::BufferUsageFlagBits::eVertexBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible,
 		vertexBuffer, vertexBufferMemory);
+
+	vk::DeviceSize stagingBufferSize = sizeof(u16) * 512 * 1024;
+	renderer->createBuffer(stagingBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		stagingBuffer, stagingBufferMemory);
 }
 
 void SceneRendering::createDescriptors()
@@ -382,7 +389,7 @@ void SceneRendering::createCopyCmdBuffer()
 
 void SceneRendering::makeRenderCmdBuffer()
 {
-	renderCommand.begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
+	renderCmd.begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
 
 	vk::ClearValue clearColor{};
 	// unused
@@ -395,22 +402,22 @@ void SceneRendering::makeRenderCmdBuffer()
 		.setClearValueCount(1)
 		.setPClearValues(&clearColor);
 
-	renderCommand.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-	renderCommand.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-	renderCommand.bindVertexBuffers(0, vertexBuffer, { 0 });
-	renderCommand.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout,
+	renderCmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	renderCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+	renderCmd.bindVertexBuffers(0, vertexBuffer, { 0 });
+	renderCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout,
 		0, descriptorSet, nullptr);
 
-	renderCommand.draw((uint32_t)verticesToRender.size(), 1, 0, 0);
+	renderCmd.draw((uint32_t)verticesToRenderSize, 1, 0, 0);
 
-	renderCommand.endRenderPass();
-	renderCommand.end();
+	renderCmd.endRenderPass();
+	renderCmd.end();
 }
 
 void SceneRendering::copyVertices() {
-	assert(verticesToRender.size() <= maxVerticesPerFrame);
+	assert(verticesToRenderSize <= maxVerticesPerFrame);
 	size_t blockSize = renderer->physicalDeviceProperties.limits.nonCoherentAtomSize;
-	size_t copySize = ((sizeof(VulkanVertex)*verticesToRender.size() / blockSize) + 1) * blockSize;
+	size_t copySize = ((sizeof(VulkanVertex)*verticesToRenderSize / blockSize) + 1) * blockSize;
 
 	vk::MappedMemoryRange vertexMemoryRange{};
 	vertexMemoryRange
@@ -420,7 +427,7 @@ void SceneRendering::copyVertices() {
 		.setSize(blockSize);
 
 	void* data = device.mapMemory(vertexBufferMemory, 0, blockSize);
-	memcpy(data, verticesToRender.data(), sizeof(VulkanVertex)*verticesToRender.size());
+	memcpy(data, verticesToRender, sizeof(VulkanVertex)*verticesToRenderSize);
 
 
 	device.flushMappedMemoryRanges(vertexMemoryRange);
@@ -444,7 +451,7 @@ void SceneRendering::renderVertices()
 		// no semaphores to wait for
 		.setWaitSemaphoreCount(0)
 		.setCommandBufferCount(1)
-		.setPCommandBuffers(&renderCommand)
+		.setPCommandBuffers(&renderCmd)
 		.setSignalSemaphoreCount(2)
 		.setPSignalSemaphores(renderFinishedSemaphores);
 
@@ -465,6 +472,61 @@ void SceneRendering::renderVertices()
 
 }
 
+void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> extent)
+{
+	assert(topLeft.x >= 0 && topLeft.y >= 0 && extent.x > 0 && extent.y > 0);
+	u32 size = (u32)(extent.x * extent.y);
+
+	// copy the data
+	void* data = device.mapMemory(stagingBufferMemory, 0, VK_WHOLE_SIZE);
+	memcpy(data, image, sizeof(u16) * size);
+	device.unmapMemory(stagingBufferMemory);
+
+	// wait for the previous operations to end
+	device.waitForFences(renderFence, VK_TRUE,
+		std::numeric_limits<uint64_t>::max());
+	device.resetFences(renderFence);
+
+	// make the new command buffer
+	copyStagingCmd.begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
+
+	// first transition
+	renderer->makeTransitionImageLayoutCmd(readImage, surfaceFormat,
+		vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eTransferDstOptimal,
+		copyStagingCmd, vk::CommandBufferUsageFlags(), false);
+
+	// copy the buffer to the readImage
+	vk::BufferImageCopy bufferImgCopy{};
+	bufferImgCopy
+		.setBufferImageHeight(0) // tightly packed data
+		.setBufferRowLength(0)
+		.setBufferOffset(0)
+		.setImageExtent({ (u32)extent.x, (u32)extent.y, 1 })
+		.setImageOffset({ (u32)topLeft.x, (u32)topLeft.y, 0 });
+	bufferImgCopy.imageSubresource
+		.setAspectMask(vk::ImageAspectFlagBits::eColor)
+		.setMipLevel(0)
+		.setBaseArrayLayer(0)
+		.setLayerCount(1);
+	copyStagingCmd.copyBufferToImage(stagingBuffer, readImage,
+		vk::ImageLayout::eTransferDstOptimal, bufferImgCopy);
+
+	// back to shader_read_only
+	renderer->makeTransitionImageLayoutCmd(readImage, surfaceFormat,
+		vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+		copyStagingCmd, vk::CommandBufferUsageFlags(), false);
+
+	copyStagingCmd.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setWaitSemaphoreCount(0)
+		.setSignalSemaphoreCount(0)
+		.setCommandBufferCount(1)
+		.setPCommandBuffers(&copyStagingCmd);
+	renderer->graphicsQueue.submit(submitInfo,renderFence);
+}
+
 void SceneRendering::destroy()
 {
 	device.destroyFence(renderFence);
@@ -483,8 +545,11 @@ void SceneRendering::destroy()
 	device.destroyImage(renderImage);
 	device.freeMemory(renderImageMemory);
 
+	device.destroyBuffer(stagingBuffer);
+	device.freeMemory(stagingBufferMemory);
 	device.destroyBuffer(vertexBuffer);
 	device.freeMemory(vertexBufferMemory);
+
 	device.destroyCommandPool(commandPool);
 
 	device.destroyPipeline(graphicsPipeline);

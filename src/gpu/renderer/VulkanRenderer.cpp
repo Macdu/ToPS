@@ -298,6 +298,14 @@ void VulkanRenderer::makeTransitionImageLayoutCmd(vk::Image image, vk::Format fo
 		sourceStage = vk::PipelineStageFlagBits::eTransfer;
 		destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
 	}
+	else if (oldLayout == vk::ImageLayout::eShaderReadOnlyOptimal
+		&& newLayout == vk::ImageLayout::eTransferDstOptimal) {
+		barrier.setSrcAccessMask(vk::AccessFlags());
+		barrier.setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
+
+		sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+		destinationStage = vk::PipelineStageFlagBits::eTransfer;
+	}
 
 	commandBuffer.pipelineBarrier(sourceStage, destinationStage,vk::DependencyFlags(), nullptr, nullptr, barrier);
 	if (cmdBeginEnd) {
@@ -327,7 +335,7 @@ void VulkanRenderer::startupImageTransition(vk::Image image, vk::Format format, 
 }
 
 void VulkanRenderer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlagBits usage,
-	vk::MemoryPropertyFlagBits properties, vk::Buffer & buffer,
+	vk::MemoryPropertyFlags properties, vk::Buffer & buffer,
 	vk::DeviceMemory & bufferMemory)
 {
 	vk::BufferCreateInfo bufferInfo{};
@@ -404,7 +412,7 @@ void VulkanRenderer::initVulkan()
 	sceneRendering.createRenderImage();
 	sceneRendering.createDescriptors();
 	sceneRendering.createGraphicsPipeline();
-	sceneRendering.createVertexBuffer();
+	sceneRendering.createBuffers();
 	makeCopyCommandBuffers();
 	sceneRendering.createCopyCmdBuffer();
 }

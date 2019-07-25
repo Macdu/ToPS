@@ -36,15 +36,18 @@ struct VulkanVertex {
 		attrDescriptions[2]
 			.setBinding(0)
 			.setLocation(2)
-			.setFormat(vk::Format::eR32G32Uint);
+			.setFormat(vk::Format::eR32G32Uint)
+			.setOffset(offsetof(VulkanVertex, textCoords));
 		attrDescriptions[3]
 			.setBinding(0)
 			.setLocation(3)
-			.setFormat(vk::Format::eR32Uint);
+			.setFormat(vk::Format::eR32Uint)
+			.setOffset(offsetof(VulkanVertex, clutId));
 		attrDescriptions[4]
 			.setBinding(0)
 			.setLocation(4)
-			.setFormat(vk::Format::eR32Uint);
+			.setFormat(vk::Format::eR32Uint)
+			.setOffset(offsetof(VulkanVertex, texturePage));
 
 		return attrDescriptions;
 	}

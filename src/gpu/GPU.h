@@ -46,7 +46,12 @@ public:
 private:
 	const Color defaultTextureColor = { 240,0,60 };
 	bool isSendingImage;
-	u32 imageSizeLeft;
+	u32 currentImageSize;
+	u32 totalImageSize;
+	u16 imageTransfer[512 * 1024];
+	Point<i16> imageTopLeft;
+	Point<i16> imageExtent;
+
 	inline Point<i16> readPoint() {
 		u32 word = gp0Queue.front();
 		gp0Queue.pop();

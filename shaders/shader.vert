@@ -47,7 +47,8 @@ layout (location = 4) in uint texturePage;
 layout (location = 0) out vec3 fragColor;
 layout (location = 1) out uint renderMode;
 layout (location = 2) out uvec2 textLoc;
-layout (location = 3) out uvec2 clutLoc;
+layout (location = 3) out vec2 textPos;
+layout (location = 4) out uvec2 clutLoc;
 
 void main(){
 	float xpos = (float(inPosition.x) / 512) - 1.0;
@@ -61,15 +62,15 @@ void main(){
 		(texturePage & 0xF) << 6,
 		(texturePage & 0x10) << 8
 	);
+	textPos = vec2(float(textLoc.x + textCoord.x), float(textLoc.y + textCoord.y));
 	clutLoc = uvec2(
 		(clutId & 0x3F) << 4,
 		(clutId & 0xFFC0) >> 6
 	);
 	if(texturePage == (1 << 16)){
-		// render texture
-		renderMode = (texturePage >> 7) & 3;
-
-	} else {
+		// render color
 		renderMode = 3;
+	} else {
+		renderMode = (texturePage >> 7) & 3;
 	}
 }

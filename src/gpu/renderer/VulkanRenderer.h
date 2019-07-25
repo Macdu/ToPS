@@ -62,7 +62,7 @@ public:
 		vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 	void createBuffer(vk::DeviceSize size, vk::BufferUsageFlagBits usage,
-		vk::MemoryPropertyFlagBits properties, vk::Buffer& buffer, vk::DeviceMemory &bufferMemory);
+		vk::MemoryPropertyFlags properties, vk::Buffer& buffer, vk::DeviceMemory &bufferMemory);
 	void createImage(vk::Image &image, vk::DeviceMemory &memory, vk::ImageUsageFlags usage, vk::Format format);
 
 	void createSyncObjects();

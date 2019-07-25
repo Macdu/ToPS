@@ -31,7 +31,6 @@ void GPU::reset() {
 	initGP0Opcodes();
 	gpuProp.reset();
 	isSendingImage = false;
-	imageSizeLeft = 0;
 }
 
 void GPU::init(vk::Instance instance, vk::SurfaceKHR surface)
@@ -41,6 +40,52 @@ void GPU::init(vk::Instance instance, vk::SurfaceKHR surface)
 	renderer.setWidth(1024);
 	renderer.setHeight(512);
 	renderer.initVulkan();
+
+	// read to render screen rendering
+	renderer.sceneRendering.verticesToRenderSize = 6;
+	renderer.sceneRendering.verticesToRender[0] = {
+		{0,0},
+		{0,0,0},
+		{0,0},
+		0,
+		(1 << 8) // 15-bit render
+	};
+	renderer.sceneRendering.verticesToRender[1] = {
+		{1024,0},
+		{0,0,0},
+		{1024,0},
+		0,
+		(1 << 8) // 15-bit render
+	};
+	renderer.sceneRendering.verticesToRender[2] = {
+		{0,512},
+		{0,0,0},
+		{0,512},
+		0,
+		(1 << 8) // 15-bit render
+	};
+	renderer.sceneRendering.verticesToRender[3] = {
+		{1024,0},
+		{0,0,0},
+		{1024,0},
+		0,
+		(1 << 8) // 15-bit render
+	};
+	renderer.sceneRendering.verticesToRender[4] = {
+		{0,512},
+		{0,0,0},
+		{0,512},
+		0,
+		(1 << 8) // 15-bit render
+	};
+	renderer.sceneRendering.verticesToRender[5] = {
+		{1024,512},
+		{0,0,0},
+		{1024,512},
+		0,
+		(1 << 8) // 15-bit render
+	};
+
 	reset();
 }
 
@@ -50,25 +95,32 @@ u32 GPU::getGPUStat() {
 
 inline void GPU::pushVertex(const Point<i16>& point,const Color & color)
 {
-	renderer.sceneRendering.verticesToRender.push_back(
-		{ point.toIVec2() + gpuProp.drawingOffset, color.toUVec3() });
+	renderer.sceneRendering
+		.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] =
+	{ 
+		point.toIVec2() + gpuProp.drawingOffset, 
+		color.toUVec3(), 
+		{0,0},0, // no used
+		1 << 16 // color rendering  
+	};
 }
 
 void GPU::drawFrame() {
 	printf("Drawing frame.\n");
-	if (renderer.sceneRendering.verticesToRender.size() != 0) {
-		renderer.drawFrame();
-		renderer.sceneRendering.verticesToRender.clear();
-	}
+	renderer.drawFrame();
+	// keep only the read to render screen rendering
+	renderer.sceneRendering.verticesToRenderSize = 6;
 }
 
 void GPU::pushCmdGP0(u32 val)
 {
 	if (isSendingImage) {
 		// special case, ignore it for now
-		imageSizeLeft--;
-		if (imageSizeLeft == 0) {
+		reinterpret_cast<u32*>(imageTransfer)[currentImageSize >> 1] = val;
+		currentImageSize += 2;
+		if (currentImageSize == totalImageSize) {
 			isSendingImage = false;
+			renderer.sceneRendering.transferImage(imageTransfer, imageTopLeft, imageExtent);
 		}
 		return;
 	}
@@ -344,22 +396,23 @@ void GPU::shadedTriangle()
 void GPU::sendRectToFrameBuffer()
 {
 	readColor();
-	auto topLeft = readPoint();
-	auto widthHeight = readPoint();
-	u32 size = ((u32)widthHeight.x) * widthHeight.y;
+	imageTopLeft = readPoint();
+	imageExtent = readPoint();
+	u32 size = ((u32)imageExtent.x) * imageExtent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
 	assert(size != 0);
+	currentImageSize = 0;
+	totalImageSize = size;
 	isSendingImage = true;
-	imageSizeLeft = size >> 1;
 }
 
 void GPU::sendFrameBufferToCPU()
 {
 	readColor();
 	auto topLeft = readPoint();
-	auto widthHeight = readPoint();
-	u32 size = ((u32)widthHeight.x) * widthHeight.y;
+	auto extent = readPoint();
+	u32 size = ((u32)topLeft.x) * extent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
 	printf("Framebuffer sent to CPU\n");

@@ -16,18 +16,34 @@ layout (location = 3) in vec2 textPos;
 layout (location = 4) flat in uvec2 clutLoc;
 layout (binding = 0) uniform sampler2D frameContent;
 
+uint vecToUint(vec4 val){
+	uint a = uint(val.a + 0.5);
+	uint r = uint(val.r * 31 + 0.5);
+	uint g = uint(val.g * 31 + 0.5);
+	uint b = uint(val.b * 31 + 0.5);
+	return (a << 15) | (b << 10) | (g << 5) | r;
+}
+
 void main(){
 	if(renderMode == 0){
 		// 4-bit clut
-		outColor = vec4(fragColor,1.0);
+		uint texel = vecToUint(texture(frameContent, textPos));
+		// get the right clut pos
+		texel = (texel >> ((int(textPos.x * 4) & 3) * 4)) & 0xF;
+		outColor = texelFetch(frameContent, ivec2(clutLoc.x + texel, clutLoc.y),0);
+		// hopefully this inequality on floating values does not lead to any problem
+		if(outColor == vec4(0.0,0.0,0.0,0.0)){
+			// transparent
+			discard;
+		}
 	} else if(renderMode == 1){
 		// 8-bit clut
-		outColor = vec4(fragColor,1.0);
+		outColor = vec4(fragColor,0.0);
 	} else if(renderMode == 2){
 		// direct 15-bit
 		outColor = texture(frameContent, textPos);
 	} else {
 		// render color
-		outColor = vec4(fragColor,1.0);
+		outColor = vec4(fragColor,0.0);
 	}
 }

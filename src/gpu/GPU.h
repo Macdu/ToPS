@@ -25,7 +25,9 @@ public:
 	void init(vk::Instance instance, vk::SurfaceKHR surface);
 	u32 getGPUStat();
 
-	inline void pushVertex(const Point<i16>& point,const Color& color);
+	inline void pushVertexColor(const Point<i16>& point,const Color& color);
+	inline void pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc,
+		const u16& clutId, const u16& textPage);
 	void drawFrame();
 
 	void pushCmdGP0(u32 val);
@@ -62,5 +64,9 @@ private:
 		u32 word = gp0Queue.front();
 		gp0Queue.pop();
 		return { (u8)word, (u8)(word >> 8), (u8)(word >> 16) };
+	}
+
+	inline Point<u8> extractTextLoc(const u32& word) {
+		return { (u8)word, (u8)(word >> 8) };
 	}
 };

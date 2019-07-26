@@ -93,15 +93,28 @@ u32 GPU::getGPUStat() {
 	return gpuProp.getGPUStat();
 }
 
-inline void GPU::pushVertex(const Point<i16>& point,const Color & color)
+inline void GPU::pushVertexColor(const Point<i16>& point,const Color & color)
 {
 	renderer.sceneRendering
 		.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] =
 	{ 
 		point.toIVec2() + gpuProp.drawingOffset, 
 		color.toUVec3(), 
-		{0,0},0, // no used
+		{0,0},0, // not used
 		1 << 16 // color rendering  
+	};
+}
+
+inline void GPU::pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc, const u16& clutId, const u16& textPage)
+{
+	renderer.sceneRendering
+		.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] =
+	{
+		point.toIVec2() + gpuProp.drawingOffset,
+		{42,42,42},
+		{(uint)textLoc.x, (uint)textLoc.y},
+		(uint)clutId,
+		(uint)textPage
 	};
 }
 
@@ -309,27 +322,44 @@ void GPU::gp1(u32 cmd)
 
 void GPU::textured4Points()
 {
-	// textures are not supported right now
 	Point<i16> vertices[4];
+	Point<u8> textLocs[4];
+	u16 clutID;
+	u16 textPage;
+	u32 word;
 	// Command + color vertex 0
 	gp0Queue.pop();
 	vertices[0] = readPoint();
 	// CULT ID + texture coordinates vertex 0
+	word = gp0Queue.front();
 	gp0Queue.pop();
+	clutID = word >> 16;
+	textLocs[0] = extractTextLoc(word);
+
 	vertices[1] = readPoint();
+
 	// Texture page + texture coordinates vertex 1
+	word = gp0Queue.front();
 	gp0Queue.pop();
+	textPage = word >> 16;
+	textLocs[1] = extractTextLoc(word);
+
 	vertices[2] = readPoint();
 	// Texture coordinates vertex 2
+	word = gp0Queue.front();
 	gp0Queue.pop();
+	textLocs[2] = extractTextLoc(word);
+
 	vertices[3] = readPoint();
 	// Texture coordinates vertex 4
+	word = gp0Queue.front();
 	gp0Queue.pop();
+	textLocs[3] = extractTextLoc(word);
 	for (int i = 0; i < 3; i++) {
-		pushVertex(vertices[i], defaultTextureColor);
+		pushVertexTexture(vertices[i], textLocs[i], clutID, textPage);
 	}
 	for (int i = 1; i < 4; i++) {
-		pushVertex(vertices[i], defaultTextureColor);
+		pushVertexTexture(vertices[i], textLocs[i], clutID, textPage);
 	}
 	printf("Draw textured quad\n");
 }
@@ -344,10 +374,10 @@ void GPU::monochrome4Points()
 	vertices[2] = readPoint();
 	vertices[3] = readPoint();
 	for (int i = 0; i < 3; i++) {
-		pushVertex(vertices[i], color);
+		pushVertexColor(vertices[i], color);
 	}
 	for (int i = 1; i < 4; i++) {
-		pushVertex(vertices[i], color);
+		pushVertexColor(vertices[i], color);
 	}
 	printf("Draw monochrome 4-points\n");
 }
@@ -366,12 +396,12 @@ void GPU::shaded4points()
 	colors[3] = readColor();
 	vertices[3] = readPoint();
 
-	pushVertex(vertices[0], colors[0]);
-	pushVertex(vertices[1], colors[1]);
-	pushVertex(vertices[3], colors[3]);
-	pushVertex(vertices[0], colors[0]);
-	pushVertex(vertices[3], colors[3]);
-	pushVertex(vertices[2], colors[2]);
+	pushVertexColor(vertices[0], colors[0]);
+	pushVertexColor(vertices[1], colors[1]);
+	pushVertexColor(vertices[3], colors[3]);
+	pushVertexColor(vertices[0], colors[0]);
+	pushVertexColor(vertices[3], colors[3]);
+	pushVertexColor(vertices[2], colors[2]);
 	printf("Draw shaded 4-points\n");
 }
 
@@ -388,7 +418,7 @@ void GPU::shadedTriangle()
 	vertices[2] = readPoint();
 
 	for (int i = 0; i < 3; i++) {
-		pushVertex(vertices[i], colors[i]);
+		pushVertexColor(vertices[i], colors[i]);
 	}
 	printf("Draw shaded triangle\n");
 }

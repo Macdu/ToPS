@@ -477,6 +477,14 @@ void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> ex
 	assert(topLeft.x >= 0 && topLeft.y >= 0 && extent.x > 0 && extent.y > 0);
 	u32 size = (u32)(extent.x * extent.y);
 
+	// change the data from ABGR to ARGB
+	for (int i = 0; i < size; i++) {
+		u16 pixel = image[i];
+		image[i] = (pixel & 0b1000001111100000) // alpha and green
+			| ((pixel & 0b11111) << 10) // red
+			| (pixel >> 10) & 0b11111; // blue
+	}
+
 	// copy the data
 	void* data = device.mapMemory(stagingBufferMemory, 0, VK_WHOLE_SIZE);
 	memcpy(data, image, sizeof(u16) * size);

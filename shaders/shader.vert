@@ -62,7 +62,7 @@ void main(){
 		(texturePage & 0xF) << 6,
 		(texturePage & 0x10) << 8
 	);
-	textPos = vec2(float(textLoc.x + textCoord.x), float(textLoc.y + textCoord.y));
+	textPos = vec2(0.0,0.0);
 	clutLoc = uvec2(
 		(clutId & 0x3F) << 4,
 		(clutId & 0xFFC0) >> 6
@@ -72,5 +72,17 @@ void main(){
 		renderMode = 3;
 	} else {
 		renderMode = (texturePage >> 7) & 3;
+		if(renderMode == 0){
+			// 4-bit rendering -> 4 pixel per texel
+			textPos = vec2(float(textLoc.x) + (float(textCoord.x) / 4),
+				float(textLoc.y + textCoord.y));
+		} else if(renderMode == 1){
+			// 8-bit rendering -> 2 pixel per texel
+			textPos = vec2(float(textLoc.x) + float(textCoord.x) / 2,
+				float(textLoc.y + textCoord.y));
+		} else if(renderMode == 2){
+			// direct 15-bit
+			textPos = vec2(float(textLoc.x + textCoord.x), float(textLoc.y + textCoord.y));
+		}
 	}
 }

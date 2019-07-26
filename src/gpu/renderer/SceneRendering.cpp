@@ -485,15 +485,15 @@ void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> ex
 			| (pixel >> 10) & 0b11111; // blue
 	}
 
-	// copy the data
-	void* data = device.mapMemory(stagingBufferMemory, 0, VK_WHOLE_SIZE);
-	memcpy(data, image, sizeof(u16) * size);
-	device.unmapMemory(stagingBufferMemory);
-
 	// wait for the previous operations to end
 	device.waitForFences(renderFence, VK_TRUE,
 		std::numeric_limits<uint64_t>::max());
 	device.resetFences(renderFence);
+
+	// copy the data
+	void* data = device.mapMemory(stagingBufferMemory, 0, VK_WHOLE_SIZE);
+	memcpy(data, image, sizeof(u16) * size);
+	device.unmapMemory(stagingBufferMemory);
 
 	// make the new command buffer
 	copyStagingCmd.begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });

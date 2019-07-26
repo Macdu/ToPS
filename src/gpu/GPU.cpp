@@ -361,7 +361,9 @@ void GPU::textured4Points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexTexture(vertices[i], textLocs[i], clutID, textPage);
 	}
-	printf("Draw textured quad\n");
+	printf("Draw textured quad : (%d,%d) (%d,%d) -> (%d,%d) (%d,%d)\n",
+		textLocs[0].x, textLocs[0].y, textLocs[3].x, textLocs[3].y,
+		vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
 }
 
 void GPU::monochrome4Points()
@@ -396,12 +398,12 @@ void GPU::shaded4points()
 	colors[3] = readColor();
 	vertices[3] = readPoint();
 
-	pushVertexColor(vertices[0], colors[0]);
-	pushVertexColor(vertices[1], colors[1]);
-	pushVertexColor(vertices[3], colors[3]);
-	pushVertexColor(vertices[0], colors[0]);
-	pushVertexColor(vertices[3], colors[3]);
-	pushVertexColor(vertices[2], colors[2]);
+	for (int i = 0; i < 3; i++) {
+		pushVertexColor(vertices[i], colors[i]);
+	}
+	for (int i = 1; i < 4; i++) {
+		pushVertexColor(vertices[i], colors[i]);
+	}
 	printf("Draw shaded 4-points\n");
 }
 
@@ -428,6 +430,8 @@ void GPU::sendRectToFrameBuffer()
 	readColor();
 	imageTopLeft = readPoint();
 	imageExtent = readPoint();
+	printf("Send image to framebuffer (%d,%d) [%d,%d]\n",
+		imageTopLeft.x, imageTopLeft.y, imageExtent.x, imageExtent.y);
 	u32 size = ((u32)imageExtent.x) * imageExtent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;

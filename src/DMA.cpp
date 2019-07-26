@@ -171,7 +171,7 @@ void DMA::dmaLinkedList(int channel) {
 			currAddr += 4;
 			currAddr &= 0x1ffffc;
 			u32 gpu_opcode = ram->load32Ram(currAddr);
-			printf("GPU opcode : 0x%08x\n", gpu_opcode);
+			//printf("GPU opcode : 0x%08x\n", gpu_opcode);
 			gpu->pushCmdGP0(gpu_opcode);
 		}
 	} while ((header & (1 << 23)) == 0);

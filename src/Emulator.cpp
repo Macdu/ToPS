@@ -21,12 +21,13 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 
 void Emulator::importBIOS()
 {
-	u8 bios_content[Bios::BIOS_SIZE];
+	u8* bios_content = new u8[Bios::BIOS_SIZE];
 	FILE* file = fopen("SCPH1001.BIN", "r");
 	fread(bios_content,sizeof(u8) /* = 1 */,Bios::BIOS_SIZE, file);
 	fclose(file);
 
 	bios.load(bios_content);
+	delete[] bios_content;
 }
 
 void Emulator::reset()

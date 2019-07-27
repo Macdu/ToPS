@@ -2,10 +2,13 @@
 
 #include "SceneRendering.h"
 
+struct GPUProperties;
+
 class VulkanRenderer {
 private:
 	const std::array<const char*, 1> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 public:
+	GPUProperties* gpuProps;
 	SceneRendering sceneRendering;
 
 	vk::Instance instance;
@@ -61,7 +64,7 @@ public:
 	void startupImageTransition(vk::Image image, vk::Format format,
 		vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
-	void createBuffer(vk::DeviceSize size, vk::BufferUsageFlagBits usage,
+	void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
 		vk::MemoryPropertyFlags properties, vk::Buffer& buffer, vk::DeviceMemory &bufferMemory);
 	void createImage(vk::Image &image, vk::DeviceMemory &memory, vk::ImageUsageFlags usage, vk::Format format);
 

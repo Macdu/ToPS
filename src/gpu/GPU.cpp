@@ -29,7 +29,8 @@ void GPU::initGP0Opcodes()
 
 void GPU::reset() {
 	initGP0Opcodes();
-	gpuProp.reset();
+	gpuProps.reset();
+	gpuReadDataSize = 0;
 	isSendingImage = false;
 }
 
@@ -39,6 +40,7 @@ void GPU::init(vk::Instance instance, vk::SurfaceKHR surface)
 	renderer.setSurface(surface);
 	renderer.setWidth(1024);
 	renderer.setHeight(512);
+	renderer.gpuProps = &gpuProps;
 	renderer.initVulkan();
 
 	// read to render screen rendering
@@ -85,12 +87,29 @@ void GPU::init(vk::Instance instance, vk::SurfaceKHR surface)
 		0,
 		(1 << 8) // 15-bit render
 	};
+	renderer.sceneRendering.verticesRenderScissors.resize(1);
+	renderer.sceneRendering.verticesRenderScissors[0] =
+		{ 5, {{0,0}, {1024,512}} };
 
 	reset();
 }
 
 u32 GPU::getGPUStat() {
-	return gpuProp.getGPUStat();
+	return gpuProps.getGPUStat();
+}
+
+u32 GPU::getGPURead()
+{
+	if (gpuReadDataSize == 0) {
+		// return random data
+		return ~0;
+	}
+	u32 res = gpuReadData[gpuReadDataCurr];
+	gpuReadDataCurr++;
+	if (gpuReadDataCurr == gpuReadDataSize) {
+		gpuReadDataSize = 0;
+	}
+	return res;
 }
 
 inline void GPU::pushVertexColor(const Point<i16>& point,const Color & color)
@@ -98,7 +117,7 @@ inline void GPU::pushVertexColor(const Point<i16>& point,const Color & color)
 	renderer.sceneRendering
 		.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] =
 	{ 
-		point.toIVec2() + gpuProp.drawingOffset, 
+		point.toIVec2() + gpuProps.drawingOffset, 
 		color.toUVec3(), 
 		{0,0},0, // not used
 		1 << 16 // color rendering  
@@ -110,7 +129,7 @@ inline void GPU::pushVertexTexture(const Point<i16>& point, const Point<u8>& tex
 	renderer.sceneRendering
 		.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] =
 	{
-		point.toIVec2() + gpuProp.drawingOffset,
+		point.toIVec2() + gpuProps.drawingOffset,
 		{42,42,42},
 		{(uint)textLoc.x, (uint)textLoc.y},
 		(uint)clutId,
@@ -123,6 +142,7 @@ void GPU::drawFrame() {
 	renderer.drawFrame();
 	// keep only the read to render screen rendering
 	renderer.sceneRendering.verticesToRenderSize = 6;
+	renderer.sceneRendering.verticesRenderScissors.resize(1);
 }
 
 void GPU::pushCmdGP0(u32 val)
@@ -204,40 +224,42 @@ void GPU::gp0(u32 cmd, u32 opcode)
 
 	case 0xE1:
 		// Draw Mode setting (aka "Texpage")
-		gpuProp.setDrawModeSetting(cmd);
+		gpuProps.setDrawModeSetting(cmd);
 		break;
 
 	case 0xE2:
 		// Texture Window setting
-		gpuProp.textureMaskX = cmd & ((1 << 5) - 1);
-		gpuProp.textureMaskY = (cmd >> 5) & ((1 << 5) - 1);
-		gpuProp.textureOffsetX = (cmd >> 10) & ((1 << 5) - 1);
-		gpuProp.textureOffsetY = (cmd >> 15) & ((1 << 5) - 1);
+		gpuProps.textureMaskX = cmd & ((1 << 5) - 1);
+		gpuProps.textureMaskY = (cmd >> 5) & ((1 << 5) - 1);
+		gpuProps.textureOffsetX = (cmd >> 10) & ((1 << 5) - 1);
+		gpuProps.textureOffsetY = (cmd >> 15) & ((1 << 5) - 1);
 		break;
 
 	case 0xE3:
 		// Set Drawing Area top left (X1,Y1)
-		gpuProp.drawingAreaLeft = cmd & ((1 << 10) - 1);
-		gpuProp.drawingAreaTop = (cmd >> 10) & ((1 << 10) - 1);
+		gpuProps.drawingAreaLeft = cmd & ((1 << 10) - 1);
+		gpuProps.drawingAreaTop = (cmd >> 10) & ((1 << 10) - 1);
+		renderer.sceneRendering.updateDrawingArea();
 		break;
 
 	case 0xE4:
 		// Set Drawing Area bottom right (X2,Y2)
-		gpuProp.drawingAreaRight = cmd & ((1 << 10) - 1);
-		gpuProp.drawingAreaBottom = (cmd >> 10) & ((1 << 10) - 1);
+		gpuProps.drawingAreaRight = cmd & ((1 << 10) - 1);
+		gpuProps.drawingAreaBottom = (cmd >> 10) & ((1 << 10) - 1);
+		renderer.sceneRendering.updateDrawingArea();
 		break;
 
 	case 0xE5:
 		// Set Drawing Offset (X,Y)
-		gpuProp.drawingOffset.x = cmd & ((1 << 11) - 1);
-		if (gpuProp.drawingOffset.x >= (1 << 10)) {
+		gpuProps.drawingOffset.x = cmd & ((1 << 11) - 1);
+		if (gpuProps.drawingOffset.x >= (1 << 10)) {
 			// 11-bit sign extension
-			gpuProp.drawingOffset.x = -(((1 << 11) - 1) - gpuProp.drawingOffset.x + 1);
+			gpuProps.drawingOffset.x = -(((1 << 11) - 1) - gpuProps.drawingOffset.x + 1);
 		}
-		gpuProp.drawingOffset.y = (cmd >> 11) & ((1 << 11) - 1);
-		if (gpuProp.drawingOffset.y >= (1 << 10)) {
+		gpuProps.drawingOffset.y = (cmd >> 11) & ((1 << 11) - 1);
+		if (gpuProps.drawingOffset.y >= (1 << 10)) {
 			// 11-bit sign extension
-			gpuProp.drawingOffset.y = -(((1 << 11) - 1) - gpuProp.drawingOffset.y + 1);
+			gpuProps.drawingOffset.y = -(((1 << 11) - 1) - gpuProps.drawingOffset.y + 1);
 		}
 
 		// hack used right now to draw
@@ -246,8 +268,8 @@ void GPU::gp0(u32 cmd, u32 opcode)
 
 	case 0xE6:
 		// Mask Bit Setting
-		gpuProp.doMaskWhenDrawing = cmd & 1;
-		gpuProp.cannotDrawToMasked = (cmd & 2) != 0;
+		gpuProps.doMaskWhenDrawing = cmd & 1;
+		gpuProps.cannotDrawToMasked = (cmd & 2) != 0;
 		break;
 
 	default:
@@ -266,7 +288,8 @@ void GPU::gp1(u32 cmd)
 		while (!gp0Queue.empty()) {
 			gp0Queue.pop();
 		}
-		gpuProp.reset();
+		gpuProps.reset();
+		renderer.sceneRendering.updateDrawingArea();
 		break;
 
 	case 0x01:
@@ -278,40 +301,40 @@ void GPU::gp1(u32 cmd)
 
 	case 0x02:
 		// acknowledge GPU IRQ interrupt
-		gpuProp.interrupRequest = false;
+		gpuProps.interrupRequest = false;
 		break;
 
 	case 0x03:
 		// Display Enable
-		gpuProp.isDisplayDisabled = cmd & 1;
+		gpuProps.isDisplayDisabled = cmd & 1;
 		break;
 
 	case 0x04:
 		//  DMA Direction / Data Request
-		gpuProp.dmaDirection = cmd & 3;
+		gpuProps.dmaDirection = cmd & 3;
 		break;
 
 	case 0x05:
 		// Start of Display area (in VRAM)
-		gpuProp.displayAreaTopLeftX = cmd & ((1 << 10)-1);
-		gpuProp.displayAreaTopLeftY = (cmd >> 10) & ((1 << 9) - 1);
+		gpuProps.displayAreaTopLeftX = cmd & ((1 << 10)-1);
+		gpuProps.displayAreaTopLeftY = (cmd >> 10) & ((1 << 9) - 1);
 		break;
 
 	case 0x06:
 		// Horizontal Display range (on Screen)
-		gpuProp.horizontalDisplayStart = cmd & ((1 << 12) - 1);
-		gpuProp.horizontalDisplayEnd = (cmd >> 12) & ((1 << 12) - 1);
+		gpuProps.horizontalDisplayStart = cmd & ((1 << 12) - 1);
+		gpuProps.horizontalDisplayEnd = (cmd >> 12) & ((1 << 12) - 1);
 		break;
 
 	case 0x07:
 		// Vertical Display range (on Screen)
-		gpuProp.verticalDisplayStart = cmd & ((1 << 10) - 1);
-		gpuProp.verticalDisplayEnd = (cmd >> 10) & ((1 << 10) - 1);
+		gpuProps.verticalDisplayStart = cmd & ((1 << 10) - 1);
+		gpuProps.verticalDisplayEnd = (cmd >> 10) & ((1 << 10) - 1);
 		break;
 
 	case 0x08:
 		// Display mode
-		gpuProp.setDisplayMode(cmd);
+		gpuProps.setDisplayMode(cmd);
 		break;
 
 	default:
@@ -446,8 +469,11 @@ void GPU::sendFrameBufferToCPU()
 	readColor();
 	auto topLeft = readPoint();
 	auto extent = readPoint();
-	u32 size = ((u32)topLeft.x) * extent.y;
+	u32 size = ((u32)imageExtent.x) * imageExtent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
 	printf("Framebuffer sent to CPU\n");
+	gpuReadDataCurr = 0;
+	gpuReadDataSize = size >> 1;
+	renderer.sceneRendering.readFramebuffer(gpuReadData, topLeft, extent);
 }

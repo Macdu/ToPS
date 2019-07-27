@@ -4,6 +4,8 @@
 
 #include <QDebug>
 
+#include "../GPUProperties.h"
+
 void VulkanRenderer::pickPhysicalDevice()
 {
 	physicalDevice = getSuitableDevice();
@@ -334,7 +336,7 @@ void VulkanRenderer::startupImageTransition(vk::Image image, vk::Format format, 
 	device.freeCommandBuffers(sceneRendering.commandPool, cmdBuffer);
 }
 
-void VulkanRenderer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlagBits usage,
+void VulkanRenderer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
 	vk::MemoryPropertyFlags properties, vk::Buffer & buffer,
 	vk::DeviceMemory & bufferMemory)
 {

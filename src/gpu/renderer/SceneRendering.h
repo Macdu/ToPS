@@ -49,11 +49,19 @@ public:
 	// store the current vertices before they are rendered
 	VulkanVertex verticesToRender[maxVerticesPerFrame];
 	int verticesToRenderSize = 0;
+	// each pair contains the last index of a vertex drawn at the specified scissor 
+	// and the scissor corresponding to it
+	// the last scissor used is stored in currentScissor
+	std::vector<std::pair<u32, vk::Rect2D>> verticesRenderScissors;
+	vk::Rect2D currentScissor = { {0,0}, {0,0} };
 
 	vk::Fence renderFence;
 	vk::Semaphore verticesRenderedSemaphore;
 	vk::Semaphore copyToReadImgReady;
 	vk::CommandBuffer copyRenderToReadCmdBuffer;
+
+	// update the current scissor based on the new gpuProps drawing area
+	void updateDrawingArea();
 
 	void init(VulkanRenderer* renderer);
 
@@ -73,6 +81,8 @@ public:
 
 	// transfer an image from DMA to the framebuffer
 	void transferImage(u16* image, Point<i16> topLeft, Point<i16> extent);
+	// transfer a part of the framebuffer to the cpu
+	void readFramebuffer(u32* output, Point<i16> topLeft, Point<i16> extent);
 
 	void destroy();
 

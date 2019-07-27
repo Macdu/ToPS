@@ -64,7 +64,11 @@ u32 Memory::read32(u32 addr) const
 	else if (addr >= 0x1F801810 && addr < 0x1F801820) {
 		// GPU
 		//printf("GPU read 0x%08x\n", addr);
-		if (addr == 0x1F801814) {
+		if (addr == 0x1F801810) {
+			// GPUREAD port
+			return gpu->getGPURead();
+		}
+		else if (addr == 0x1F801814) {
 			// GPUStat register
 			return gpu->getGPUStat();
 		}

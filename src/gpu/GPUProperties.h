@@ -10,7 +10,7 @@ struct GPUProperties {
 	u32 texturePageYBase;
 
 	// bit 5-6 (0=B/2+F/2, 1=B+F, 2=B-F, 3=B+F/4)
-	u32 semiTransparancy;
+	u32 semiTransparency;
 
 	// bit 7-8 (0=4bit, 1=8bit, 2=15bit, 3=Reserved)
 	u32 texturePageColors;
@@ -114,7 +114,7 @@ struct GPUProperties {
 	void reset() {
 		texturePageXBase = 0;
 		texturePageYBase = 0;
-		semiTransparancy = 0;
+		semiTransparency = 0;
 		texturePageColors = 0;
 		dither24to15 = false;
 		canDrawToDisplayArea = false;
@@ -154,7 +154,7 @@ struct GPUProperties {
 	void setDrawModeSetting(u32 cmd) {
 		texturePageXBase = (cmd & 0xF) * 64;
 		texturePageYBase = (cmd & 0x10) << 4;
-		semiTransparancy = (cmd >> 5) & 3;
+		semiTransparency = (cmd >> 5) & 3;
 		texturePageColors = (cmd >> 7) & 3;
 		dither24to15 = (cmd & (1 << 9)) != 0;
 		canDrawToDisplayArea = (cmd & (1 << 10)) != 0;
@@ -179,7 +179,7 @@ struct GPUProperties {
 		u32 res = 0;
 		res |= texturePageXBase >> 6;
 		res |= texturePageYBase >> 4;
-		res |= semiTransparancy << 5;
+		res |= semiTransparency << 5;
 		res |= texturePageColors << 7;
 		res |= dither24to15 << 9;
 		res |= canDrawToDisplayArea << 10;

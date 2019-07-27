@@ -9,7 +9,7 @@ class Emulator;
 
 class GPU {
 public:
-	GPUProperties gpuProp;
+	GPUProperties gpuProps;
 	VulkanRenderer renderer;
 	Emulator* emu;
 
@@ -24,6 +24,8 @@ public:
 	void reset();
 	void init(vk::Instance instance, vk::SurfaceKHR surface);
 	u32 getGPUStat();
+	// return content of GPUREAD (0x1F801810) port
+	u32 getGPURead();
 
 	inline void pushVertexColor(const Point<i16>& point,const Color& color);
 	inline void pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc,
@@ -53,6 +55,10 @@ private:
 	u16 imageTransfer[512 * 1024];
 	Point<i16> imageTopLeft;
 	Point<i16> imageExtent;
+
+	u32 gpuReadData[512 * 1024 / 2];
+	u32 gpuReadDataSize = 0;
+	u32 gpuReadDataCurr = 0;
 
 	inline Point<i16> readPoint() {
 		u32 word = gp0Queue.front();

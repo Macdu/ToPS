@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "VulkanRenderer.h"
+#include "../GPUProperties.h"
 
 static std::vector<char> readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -19,6 +20,30 @@ static std::vector<char> readFile(const std::string& filename) {
 	file.close();
 
 	return buffer;
+}
+
+void SceneRendering::updateDrawingArea()
+{
+	vk::Rect2D newScissor = {
+		{(i32)renderer->gpuProps->drawingAreaLeft, (i32)renderer->gpuProps->drawingAreaTop},
+		{0,0}
+	};
+	newScissor.extent = {
+		(u32)renderer->gpuProps->drawingAreaRight - newScissor.offset.x + 1,
+		(u32)renderer->gpuProps->drawingAreaBottom - newScissor.offset.y + 1
+	};
+
+	if (newScissor != currentScissor) {
+		// update scissor
+		if (verticesRenderScissors.back().first != verticesToRenderSize - 1) {
+			// vertices were drawn using the previous scissor
+			verticesRenderScissors.push_back({
+				verticesToRenderSize - 1,
+				currentScissor
+				});
+		}
+		currentScissor = newScissor;
+	}
 }
 
 void SceneRendering::init(VulkanRenderer * renderer)
@@ -125,8 +150,15 @@ void SceneRendering::createGraphicsPipeline()
 	vk::PipelineViewportStateCreateInfo viewportState{
 		vk::PipelineViewportStateCreateFlags(),
 		1, &viewport,
-		1, &scissor
+		1, &scissor // not sure about that, dynamic scissor is used
 	};
+
+	// dynamic scissor
+	vk::DynamicState dynamicStateScissor = vk::DynamicState::eScissor;
+	vk::PipelineDynamicStateCreateInfo dynamicState{};
+	dynamicState
+		.setDynamicStateCount(1)
+		.setPDynamicStates(&dynamicStateScissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -173,6 +205,7 @@ void SceneRendering::createGraphicsPipeline()
 		.setPRasterizationState(&rasterizer)
 		.setPMultisampleState(&multisampling)
 		.setPColorBlendState(&colorBlending)
+		.setPDynamicState(&dynamicState)
 		.setLayout(pipelineLayout)
 		.setRenderPass(renderPass)
 		.setSubpass(0);
@@ -287,7 +320,8 @@ void SceneRendering::createBuffers()
 		vertexBuffer, vertexBufferMemory);
 
 	vk::DeviceSize stagingBufferSize = sizeof(u16) * 512 * 1024;
-	renderer->createBuffer(stagingBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+	renderer->createBuffer(stagingBufferSize,
+		vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		stagingBuffer, stagingBufferMemory);
 }
@@ -408,7 +442,19 @@ void SceneRendering::makeRenderCmdBuffer()
 	renderCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout,
 		0, descriptorSet, nullptr);
 
-	renderCmd.draw((uint32_t)verticesToRenderSize, 1, 0, 0);
+	u32 startIndex = 0;
+	for (u32 i = 0; i < verticesRenderScissors.size(); i++) {
+		// set the scissor for the specified vertices
+		renderCmd.setScissor(0, verticesRenderScissors[i].second);
+		renderCmd.draw((u32)(verticesRenderScissors[i].first - startIndex + 1), 1, startIndex, 0);
+		startIndex = verticesRenderScissors[i].first + 1;
+	}
+	if (startIndex != verticesToRenderSize) {
+		// draw the last set
+		renderCmd.setScissor(0, currentScissor);
+		renderCmd.draw((u32)(verticesToRenderSize - startIndex), 1, startIndex, 1);
+	}
+
 
 	renderCmd.endRenderPass();
 	renderCmd.end();
@@ -475,10 +521,10 @@ void SceneRendering::renderVertices()
 void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> extent)
 {
 	assert(topLeft.x >= 0 && topLeft.y >= 0 && extent.x > 0 && extent.y > 0);
-	u32 size = (u32)(extent.x * extent.y);
+	u32 size = ((u32)extent.x) * extent.y;
 
 	// change the data from ABGR to ARGB
-	for (int i = 0; i < size; i++) {
+	for (u32 i = 0; i < size; i++) {
 		u16 pixel = image[i];
 		image[i] = (pixel & 0b1000001111100000) // alpha and green
 			| ((pixel & 0b11111) << 10) // red
@@ -533,6 +579,64 @@ void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> ex
 		.setCommandBufferCount(1)
 		.setPCommandBuffers(&copyStagingCmd);
 	renderer->graphicsQueue.submit(submitInfo,renderFence);
+}
+
+void SceneRendering::readFramebuffer(u32* output, Point<i16> topLeft, Point<i16> extent)
+{
+	assert(topLeft.x >= 0 && topLeft.y >= 0 && extent.x > 0 && extent.y > 0);
+	u32 size = ((u32)extent.x) * extent.y;
+	size = (size + 1) & ~1;
+
+	// wait for the previous operations to end
+	device.waitForFences(renderFence, VK_TRUE,
+		std::numeric_limits<uint64_t>::max());
+	device.resetFences(renderFence);
+
+	// make the new command buffer
+	copyStagingCmd.begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
+
+	// copy from the framebuffer to the staging buffer
+	vk::BufferImageCopy bufferImgCopy{};
+	bufferImgCopy
+		.setBufferImageHeight(0) // tightly packed data
+		.setBufferRowLength(0)
+		.setBufferOffset(0)
+		.setImageExtent({ (u32)extent.x, (u32)extent.y, 1 })
+		.setImageOffset({ (u32)topLeft.x, (u32)topLeft.y, 0 });
+	bufferImgCopy.imageSubresource
+		.setAspectMask(vk::ImageAspectFlagBits::eColor)
+		.setMipLevel(0)
+		.setBaseArrayLayer(0)
+		.setLayerCount(1);
+	copyStagingCmd.copyImageToBuffer(renderImage, vk::ImageLayout::eTransferSrcOptimal,
+		stagingBuffer, bufferImgCopy);
+	copyStagingCmd.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setWaitSemaphoreCount(0)
+		.setSignalSemaphoreCount(0)
+		.setCommandBufferCount(1)
+		.setPCommandBuffers(&copyStagingCmd);
+	renderer->graphicsQueue.submit(submitInfo, renderFence);
+
+	// we can only wait here
+	device.waitForFences(renderFence, VK_TRUE,
+		std::numeric_limits<uint64_t>::max());
+	// no need to reset the fence
+
+	// copy the data
+	void* data = device.mapMemory(stagingBufferMemory, 0, VK_WHOLE_SIZE);
+	memcpy(output, data, sizeof(u16) * size);
+	device.unmapMemory(stagingBufferMemory);
+
+	// convert back from ARGB to ABGR
+	for (u32 i = 0; i < size; i++) {
+		u16 pixel = reinterpret_cast<u16*>(output)[i];
+		reinterpret_cast<u16*>(output)[i] = (pixel & 0b1000001111100000) // alpha and green
+			| ((pixel & 0b11111) << 10) // blue
+			| (pixel >> 10) & 0b11111; // red
+	}
 }
 
 void SceneRendering::destroy()

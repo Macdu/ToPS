@@ -9,12 +9,14 @@ class Emulator;
 
 class GPU {
 public:
+	// values taken from Avocado emulator
+	static constexpr int cyclesPerScanline = 3413;
+	static constexpr int totalNTSCScanlines = 263;
+	static constexpr int scanlineVBlankStart = 243;
+
 	GPUProperties gpuProps;
 	VulkanRenderer renderer;
 	Emulator* emu;
-
-	// tells if a frame is ready to be rendered
-	bool isFrameReady = false;
 
 	// GP0 command FIFO
 	std::queue<u32> gp0Queue;
@@ -26,6 +28,8 @@ public:
 	u32 getGPUStat();
 	// return content of GPUREAD (0x1F801810) port
 	u32 getGPURead();
+	// set the current scanline being 
+	void setScanline(int scanline);
 
 	inline void pushVertexColor(const Point<i16>& point,const Color& color);
 	inline void pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc,
@@ -48,6 +52,11 @@ public:
 	void sendFrameBufferToCPU();
 
 private:
+	// the total number of frames that have been rendered
+	u64 totalFrames = 0;
+
+	int currScanline = 0;
+
 	const Color defaultTextureColor = { 240,0,60 };
 	bool isSendingImage;
 	u32 currentImageSize;

@@ -112,6 +112,21 @@ u32 GPU::getGPURead()
 	return res;
 }
 
+void GPU::setScanline(int scanline)
+{
+	assert(scanline >= 0 && scanline < totalNTSCScanlines);
+	if (scanline >= scanlineVBlankStart) {
+		gpuProps.drawingOdd = false;
+	}
+	else {
+		// depends if we are in interlaced mode or not
+		if (gpuProps.hasVerticalInterlace) {
+			gpuProps.drawingOdd = (bool)(scanline % 2);
+		}
+		// otherwise it changes at the next frame
+	}
+}
+
 inline void GPU::pushVertexColor(const Point<i16>& point,const Color & color)
 {
 	renderer.sceneRendering
@@ -143,6 +158,12 @@ void GPU::drawFrame() {
 	// keep only the read to render screen rendering
 	renderer.sceneRendering.verticesToRenderSize = 6;
 	renderer.sceneRendering.verticesRenderScissors.resize(1);
+	totalFrames++;
+
+	// set the drawOdd bit if needed
+	if (!gpuProps.hasVerticalInterlace) {
+		gpuProps.drawingOdd = (bool)(totalFrames % 2);
+	}
 }
 
 void GPU::pushCmdGP0(u32 val)
@@ -262,8 +283,6 @@ void GPU::gp0(u32 cmd, u32 opcode)
 			gpuProps.drawingOffset.y = -(((1 << 11) - 1) - gpuProps.drawingOffset.y + 1);
 		}
 
-		// hack used right now to draw
-		isFrameReady = true;
 		break;
 
 	case 0xE6:

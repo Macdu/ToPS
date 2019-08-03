@@ -44,9 +44,13 @@ void Emulator::destroy()
 
 void Emulator::renderFrame()
 {
-	while (!gpu.isFrameReady) {
-		cpu.step();
+	for (int scanline = 0; scanline < GPU::totalNTSCScanlines; scanline++) {
+		gpu.setScanline(scanline);
+		// a cpu cycle happens every 3 PS1 clock cycle
+		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline / 3; cpuCycle++) {
+			cpu.step();
+		}
 	}
+	// drawing frame when VBlank start may be better
 	gpu.drawFrame();
-	gpu.isFrameReady = false;
 }

@@ -72,7 +72,9 @@ struct GPUProperties {
 	u32 dmaDirection;
 
 	// bit 31 Drawing even/odd lines in interlace mode (0=Even or Vblank, 1=Odd)
-	// for now set to 0
+	// In interlaced mode, = scanline % 2
+	// otherwise, = framecount % 2
+	bool drawingOdd;
 
 	// Textured Rectangle X-Flip
 	bool textureRectangleFlipX;
@@ -189,7 +191,7 @@ struct GPUProperties {
 		res |= horizontalRes2 << 16;
 		res |= horizontalRes1 << 17;
 		// workaround right now
-		//res |= verticalRes << 19;
+		res |= verticalRes << 19;
 		res |= isPAL << 20;
 		res |= isDepthDisplay24 << 21;
 		res |= hasVerticalInterlace << 22;
@@ -198,6 +200,7 @@ struct GPUProperties {
 		// everything is ready;
 		res |= 0b1111 << 25;
 		res |= dmaDirection << 29;
+		res |= drawingOdd << 31;
 		return res;
 	}
 };

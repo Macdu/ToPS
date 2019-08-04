@@ -15,8 +15,10 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	gpu.emu = this;
 	gpu.init(instance, surface);
 	importBIOS();
-	
+
 	reset();
+
+	importEXE();
 }
 
 void Emulator::importBIOS()
@@ -28,6 +30,52 @@ void Emulator::importBIOS()
 
 	bios.load(bios_content);
 	delete[] bios_content;
+}
+
+void Emulator::importEXE()
+{
+	// the ps1 exe header is 0x800 bytes long
+	u8* header = new u8[0x800];
+	FILE* file = fopen("prog_ps1.exe", "r");
+	fread(header, sizeof(u8), 0x800, file);
+
+	// assert the header starts with "PS-X EXE" ascii
+	constexpr char* beginning = "PS-X EXE";
+	for (int i = 0; i < 8; i++) {
+		assert((char)header[i] == beginning[i]);
+	}
+
+	u32* header32 = reinterpret_cast<u32*>(header);
+	cpu.getState()->pc = header32[4];
+	cpu.getState()->nextpc = cpu.getState()->pc + 4;
+	cpu.getState()->registers[28] = header32[5];
+	
+	u32 copyDest = header32[6];
+	u32 copySize = header32[7];
+	assert((copySize & 0x7FF) == 0);
+
+	// memfill is not useful here (the whole ram is made of 0)
+	if (header32[12] != 0) {
+		cpu.getState()->registers[29] = header32[12] + header32[13];
+		cpu.getState()->registers[30] = header32[12] + header32[13];
+	}
+	else {
+		// normally nothing should be done
+		cpu.getState()->registers[29] = 0x801FFFF0;
+		cpu.getState()->registers[30] = 0x801FFFF0;
+	}
+
+	u32* code = new u32[copySize >> 2];
+	fread(code, 1 /* one byte*/, copySize, file);
+	for (u32 i = 0; i < (copySize >> 2); i++) {
+		cpu.getMemory()->write32(copyDest + (i << 2), code[i]);
+	}
+
+
+	delete[] header;
+	delete[] code;
+	fclose(file);
+	printf("Successfully loaded exe ps1 file!\n");
 }
 
 void Emulator::reset()
@@ -46,11 +94,15 @@ void Emulator::renderFrame()
 {
 	for (int scanline = 0; scanline < GPU::totalNTSCScanlines; scanline++) {
 		gpu.setScanline(scanline);
+
+		if (scanline == GPU::scanlineVBlankStart) {
+			gpu.drawFrame();
+		}
+
 		// a cpu cycle happens every 3 PS1 clock cycle
 		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline / 3; cpuCycle++) {
 			cpu.step();
 		}
 	}
-	// drawing frame when VBlank start may be better
-	gpu.drawFrame();
+	
 }

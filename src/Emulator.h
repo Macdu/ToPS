@@ -16,6 +16,9 @@ public:
 	// import the bios
 	void importBIOS();
 
+	// import an exe file
+	void importEXE();
+
 	// reset the emulator
 	void reset();
 

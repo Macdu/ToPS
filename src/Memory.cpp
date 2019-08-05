@@ -25,10 +25,10 @@ u32 Memory::read32(u32 addr) const
 		// Bios
 		return bios->read32(addr - 0x1FC00000);
 	}
-	/*else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
+	else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
 		// Scratchpad
 		return ram->load32Scratchpad(addr - 0x1F800000);
-	}*/
+	}
 	else if (addr >= 0x1F801070 && addr < 0x1F801078) {
 		// Interrupt status/mask register
 		return 0;

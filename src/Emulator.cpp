@@ -23,7 +23,7 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	while (cpu.getState()->pc != 0x80030000) {
 		cpu.step();
 	}
-	printf("Bios startup done!");
+	printf("Bios startup done!\n");
 
 	// for now we debug this part
 	setDebugging(true);

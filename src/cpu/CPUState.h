@@ -27,14 +27,25 @@ struct CPUState {
 		if (index == 12 || val == 0) {
 			cop0registers[index] = val;
 		}
+		else if (index == 13) {
+			// cause register
+			// mtc0 can only modify the 8th and 9th bits (SW)
+			*cause &= ~(0b11 << 8);
+			*cause |= val & (0b11 << 8);
+		}
 		else {
 			throw_error("Cop0 register value unhandled");
 		}
 	}
 
 	u32 readCop0Reg(u32 index) {
-		if (index == 12 || index == 13 || index == 14)
+		if (index == 12 || index == 13 || index == 14) {
 			return cop0registers[index];
+		}
+		else if (index == 15) {
+			// PRID, no$cash says it should be 2
+			return 2;
+		}
 		throw_error("Unhandled Cop0 Register read");
 	}
 

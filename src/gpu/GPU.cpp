@@ -356,6 +356,25 @@ void GPU::gp1(u32 cmd)
 		gpuProps.setDisplayMode(cmd);
 		break;
 
+	case 0x10: {
+		u32 retVal;
+		// GPU info
+		switch (cmd & ((1 << 24) - 1)) {
+		case 7:
+			// GPU Type
+			// no$cash says it should be 2
+			retVal = 2;
+			break;
+		default:
+			throw_error("Unimplemented GPU_info type!\n");
+			break;
+		}
+		gpuReadDataSize = 1;
+		gpuReadDataCurr = 0;
+		gpuReadData[0] = retVal;
+		break;
+	}
+
 	default:
 		printf("Opcode 0x%02x for cmd 0x%08x GP1 not valid\n", opcode, cmd);
 		throw_error("Unrecognized opcode!");

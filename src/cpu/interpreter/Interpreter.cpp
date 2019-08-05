@@ -7,7 +7,7 @@
 bool is_debugging = false;
 
 void setDebugging(bool state) {
-	is_debugging = true;
+	is_debugging = state;
 }
 
 Interpreter::~Interpreter()
@@ -150,14 +150,14 @@ void Interpreter::interpret()
 			if (denominator == 0) {
 				state->hi = static_cast<u32>(numerator);
 				if (numerator >= 0) {
-					state->lo = 1;
-				}
-				else {
 					state->lo = -1;
 				}
+				else {
+					state->lo = 1;
+				}
 			}
-			else if (numerator == (-1) << 31 && denominator == -1) {
-				state->lo = numerator;
+			else if (numerator == 1 << 31 && denominator == -1) {
+				state->lo = 1 << 31;
 				state->hi = 0;
 			}
 			else {

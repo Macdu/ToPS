@@ -18,6 +18,15 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 
 	reset();
 
+	// we need to let the cpu do its stuff before
+	// According to Avocado, waiting until it gets to this address is enough
+	while (cpu.getState()->pc != 0x80030000) {
+		cpu.step();
+	}
+	printf("Bios startup done!");
+
+	// for now we debug this part
+	setDebugging(true);
 	importEXE();
 }
 

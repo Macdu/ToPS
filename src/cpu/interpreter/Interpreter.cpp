@@ -133,6 +133,16 @@ void Interpreter::interpret()
 			state->lo = reg[regs(instr)];
 			break;
 
+		case 0b011000: {
+			// mult $rs, $rt
+			i64 v1 = static_cast<i32>(reg[regs(instr)]);
+			i64 v2 = static_cast<i32>(reg[regt(instr)]);
+			i64 res = v1 * v2;
+			state->hi = static_cast<u32>(res >> 32);
+			state->lo = static_cast<u32>(res);
+			break;
+		}
+
 		case 0b011001: {
 			// multu $rs, $rt
 			u64 v1 = static_cast<u64>(reg[regs(instr)]);
@@ -340,6 +350,11 @@ void Interpreter::interpret()
 	case 0b001101:
 		// ori $rt, $rs, imm
 		reg[regt(instr)] = imm(instr) | reg[regs(instr)];
+		break;
+
+	case 0b001110:
+		// xori $rt, $rs, imm
+		reg[regt(instr)] = imm(instr) ^ reg[regs(instr)];
 		break;
 
 	case 0b001111:

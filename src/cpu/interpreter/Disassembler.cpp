@@ -81,6 +81,11 @@ std::string Disassembler::disassemble(u32 instr)
 			sprintf(res, "mtlo $r%d", regs(instr));
 			break;
 
+		case 0b011000:
+			// mult $rs, $rt
+			sprintf(res, "mult $r%d, $r%d", regs(instr), regt(instr));
+			break;
+
 		case 0b011001:
 			// multu $rs, $rt
 			sprintf(res, "multu $r%d, $r%d", regs(instr), regt(instr));
@@ -224,6 +229,11 @@ std::string Disassembler::disassemble(u32 instr)
 	case 0b001101:
 		// ori $rt, $rs, imm
 		sprintf(res, "ori $r%d, $r%d, 0x%04x", regt(instr), regs(instr), imm(instr));
+		break;
+
+	case 0b001110:
+		// xori $rt, $rs, imm
+		sprintf(res, "xori $r%d, $r%d, 0x%04x", regt(instr), regs(instr), imm(instr));
 		break;
 
 	case 0b001111:

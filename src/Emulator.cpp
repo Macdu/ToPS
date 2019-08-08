@@ -25,8 +25,8 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	}
 	printf("Bios startup done!\n");
 
-	//setDebugging(true);
 	importEXE();
+	//setDebugging(true);
 }
 
 void Emulator::importBIOS()

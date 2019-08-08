@@ -8,6 +8,7 @@ struct CPUState;
 enum ExceptionCause;
 
 void setDebugging(bool state);
+bool isDebugging();
 
 class Interpreter {
 public:
@@ -15,6 +16,8 @@ public:
 	void init(CPU* cpu);
 	void interpret();
 	void exception(ExceptionCause cause);
+	// called on ps1 putchar
+	void ps1_putchar(char val);
 
 private:
 	Disassembler disassembler;
@@ -23,6 +26,10 @@ private:
 	CPUState* state;
 	u32* reg;
 	u32 currPC;
+
+	// used for ps1_putchar
+	char buffer[1025];
+	char bufferSize = 0;
 
 	struct DelayReg {
 		u32 regIndex;

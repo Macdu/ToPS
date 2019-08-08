@@ -10,6 +10,20 @@ void setDebugging(bool state) {
 	is_debugging = state;
 }
 
+bool isDebugging() {
+	return is_debugging;
+}
+
+void Interpreter::ps1_putchar(char val)
+{
+	buffer[bufferSize++] = val;
+	if (bufferSize == 1024 || val == '\n' || val == 0) {
+		buffer[bufferSize - 1] = 0;
+		printf("PS out : %s\n", buffer + 1);
+		bufferSize = 0;
+	}
+}
+
 Interpreter::~Interpreter()
 {
 	delete currDelayReg;
@@ -37,6 +51,12 @@ void Interpreter::interpret()
 	//}
 	u32 instr = memory->read32(currPC);
 	if(is_debugging)printf("PC : 0x%08x : %s\n",state->pc, disassembler.disassemble(instr).c_str());
+
+	// hack used in order to show printf
+	// intercepts std_out_putchar bios calls
+	if (currPC == 0x00004070) {
+		ps1_putchar(static_cast<char>(reg[4] & 0xFF));
+	}
 
 	state->pc = state->nextpc;
 	state->nextpc += 4;

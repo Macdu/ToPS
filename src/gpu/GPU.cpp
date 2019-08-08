@@ -15,6 +15,8 @@ void GPU::initGP0Opcodes()
 	gp0_opcodes_length[0x30] = 6;
 	gp0_opcodes_length[0x38] = 8;
 
+	gp0_opcodes_length[0x68] = 2;
+
 	gp0_opcodes_length[0xA0] = 3;
 	gp0_opcodes_length[0xC0] = 3;
 
@@ -231,6 +233,11 @@ void GPU::gp0(u32 cmd, u32 opcode)
 	case 0x38:
 		// shaded 4 point polygon
 		shaded4points();
+		break;
+
+	case 0x68:
+		// dot
+		dot();
 		break;
 
 	case 0xA0:
@@ -484,6 +491,15 @@ void GPU::shadedTriangle()
 		pushVertexColor(vertices[i], colors[i]);
 	}
 	printf("Draw shaded triangle\n");
+}
+
+void GPU::dot()
+{
+	Color color = readColor();
+	Point<i16> vertex = readPoint();
+	for (int i = 0; i < 3; i++) {
+		pushVertexColor(vertex, color);
+	}
 }
 
 void GPU::sendRectToFrameBuffer()

@@ -46,6 +46,7 @@ struct CPUState {
 			// PRID, no$cash says it should be 2
 			return 2;
 		}
+		printf("Cop0 unhandled read at index %d!\n", index);
 		throw_error("Unhandled Cop0 Register read");
 	}
 

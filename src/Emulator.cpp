@@ -25,15 +25,14 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	}
 	printf("Bios startup done!\n");
 
-	// for now we debug this part
-	setDebugging(true);
+	//setDebugging(true);
 	importEXE();
 }
 
 void Emulator::importBIOS()
 {
 	u8* bios_content = new u8[Bios::BIOS_SIZE];
-	FILE* file = fopen("SCPH1001.BIN", "r");
+	FILE* file = fopen("SCPH1001.BIN", "rb");
 	fread(bios_content,sizeof(u8) /* = 1 */,Bios::BIOS_SIZE, file);
 	fclose(file);
 
@@ -45,7 +44,7 @@ void Emulator::importEXE()
 {
 	// the ps1 exe header is 0x800 bytes long
 	u8* header = new u8[0x800];
-	FILE* file = fopen("prog_ps1.exe", "r");
+	FILE* file = fopen("prog_ps1.exe", "rb");
 	fread(header, sizeof(u8), 0x800, file);
 
 	// assert the header starts with "PS-X EXE" ascii
@@ -75,7 +74,7 @@ void Emulator::importEXE()
 	}
 
 	u32* code = new u32[copySize >> 2];
-	fread(code, 1 /* one byte*/, copySize, file);
+	fread(code, sizeof(u8), copySize, file);
 	for (u32 i = 0; i < (copySize >> 2); i++) {
 		cpu.getMemory()->write32(copyDest + (i << 2), code[i]);
 	}

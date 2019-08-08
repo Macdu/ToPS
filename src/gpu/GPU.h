@@ -47,6 +47,7 @@ public:
 	void monochrome4Points();
 	void shaded4points();
 	void shadedTriangle();
+	void dot();
 
 	void sendRectToFrameBuffer();
 	void sendFrameBufferToCPU();

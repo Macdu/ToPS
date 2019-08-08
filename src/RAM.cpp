@@ -22,25 +22,16 @@ u32 RAM::load32Scratchpad(u32 offset)
 
 void RAM::write32Ram(u32 offset, u32 value)
 {
-	if ((offset >> 2) == (0x80078354 >> 2)) {
-		printf("Maisss\n");
-	}
 	ram[offset >> 2] = value;
 }
 
 void RAM::write16Ram(u32 offset, u16 value)
 {
-	if ((offset >> 2) == (0x80078354 >> 2)) {
-		printf("Maisss\n");
-	}
 	reinterpret_cast<u16*>(ram)[offset >> 1] = value;
 }
 
 void RAM::write8Ram(u32 offset, u8 value)
 {
-	if ((offset >> 2) == (0x80078354 >> 2)) {
-		printf("Maisss\n");
-	}
 	reinterpret_cast<u8*>(ram)[offset] = value;
 }
 

@@ -11,10 +11,14 @@ public:
 	u16 load16Ram(u32 offset);
 	u8 load8Ram(u32 offset);
 	u32 load32Scratchpad(u32 offset);
+	u16 load16Scratchpad(u16 offset);
+	u8 load8Scratchpad(u32 offset);
 	void write32Ram(u32 offset, u32 value);
 	void write16Ram(u32 offset, u16 value);
 	void write8Ram(u32 offset, u8 value);
 	void write32Scratchpad(u32 offset, u32 value);
+	void write16Scratchpad(u32 offset, u16 value);
+	void write8Scratchpad(u32 offset, u8 value);
 
 private:
 	u32 ram[RAM_SIZE / 4];

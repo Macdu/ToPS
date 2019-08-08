@@ -90,6 +90,10 @@ u16 Memory::read16(u32 addr) const
 	if (addr < RAM::RAM_SIZE) {
 		return ram->load16Ram(addr);
 	}
+	else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
+		// Scratchpad
+		return ram->load16Scratchpad(addr - 0x1F800000);
+	}
 	else if (addr >= 0x1F801C00 && addr < 0x1F802000) {
 		// SPU
 		return 0;
@@ -111,6 +115,10 @@ u8 Memory::read8(u32 addr) const
 	else if (addr >= 0x1FC00000 && addr - 0x1FC00000 < Bios::BIOS_SIZE) {
 		// Bios
 		return bios->read8(addr - 0x1FC00000);
+	}
+	else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
+		// Scratchpad
+		return ram->load8Scratchpad(addr - 0x1F800000);
 	}
 	else if (addr >= 0x1f000000 && addr - 0x1f000000 < 0x100) {
 		// Expansion 1
@@ -134,6 +142,10 @@ void Memory::write32(u32 addr, u32 value)
 	if (addr <= RAM::RAM_SIZE) {
 		// RAM
 		ram->write32Ram(addr, value);
+	}
+	else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
+		// Scratchpad
+		ram->write32Scratchpad(addr - 0x1F800000, value);
 	}
 	else if (addr >= 0x1F801000 && addr <= 0x1F801060) {
 		// various memory control registers
@@ -206,6 +218,10 @@ void Memory::write16(u32 addr, u16 value)
 		// RAM
 		ram->write16Ram(addr, value);
 	}
+	else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
+		// Scratchpad
+		ram->write16Scratchpad(addr - 0x1F800000, value);
+	}
 	else if (addr >= 0x1F801D80 && addr < 0x1F802000) {
 		// SPU
 	}
@@ -237,6 +253,10 @@ void Memory::write8(u32 addr, u8 value)
 	if (addr <= RAM::RAM_SIZE) {
 		// RAM
 		ram->write8Ram(addr, value);
+	}
+	else if (addr >= 0x1F800000 && (addr - 0x1F800000) < RAM::SCRATCHPAD_SIZE) {
+		// Scratchpad
+		ram->write8Scratchpad(addr - 0x1F800000, value);
 	}
 	else if (addr >= 0x1F802000 && addr < 0x1F802060) {
 		// Expansion Region 2 - Int/Dip/Post

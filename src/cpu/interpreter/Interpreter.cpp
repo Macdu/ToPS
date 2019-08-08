@@ -109,8 +109,8 @@ void Interpreter::interpret()
 			// jr $rs
 			u32 addr = reg[regs(instr)];
 			if ((addr & 0b11) != 0) {
-				printf("PC alignment error!");
-				exception(ExceptionCause::LOAD_ERROR);
+				printf("PC alignment error!\n");
+				exception(ExceptionCause::LOAD_ERROR, addr);
 				break;
 			}
 			state->nextpc = addr;
@@ -121,8 +121,8 @@ void Interpreter::interpret()
 			// jalr $rd, $rs
 			reg[regd(instr)] = state->nextpc;
 			if ((reg[regs(instr)] & 0b11) != 0) {
-				printf("PC alignment error!");
-				exception(ExceptionCause::LOAD_ERROR);
+				printf("PC alignment error!\n");
+				exception(ExceptionCause::LOAD_ERROR, reg[regs(instr)]);
 				break;
 			}
 			state->nextpc = reg[regs(instr)];
@@ -221,6 +221,12 @@ void Interpreter::interpret()
 		case 0b100001:
 			// addu $rd, $rs, $rt
 			reg[regd(instr)] = reg[regs(instr)] + reg[regt(instr)];
+			break;
+
+		case 0b100010:
+			// sub $rd, $rs, $rt
+			check_overflow(reg[regs(instr)], -reg[regt(instr)]);
+			reg[regd(instr)] = reg[regs(instr)] - reg[regt(instr)];
 			break;
 
 		case 0b100011:
@@ -422,8 +428,8 @@ void Interpreter::interpret()
 		// lh $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 1) != 0) {
-			printf("Load alignment16 error!");
-			exception(ExceptionCause::LOAD_ERROR);
+			printf("Load alignment16 error!\n");
+			exception(ExceptionCause::LOAD_ERROR, addr);
 			break;
 		}
 		setDelayReg(regt(instr), static_cast<u32>(static_cast<i16>(memory->read16(addr))));
@@ -459,8 +465,8 @@ void Interpreter::interpret()
 		// lw $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 0b11) != 0) {
-			printf("Load alignment error!");
-			exception(ExceptionCause::LOAD_ERROR);
+			printf("Load alignment error!\n");
+			exception(ExceptionCause::LOAD_ERROR, addr);
 			break;
 		}
 		setDelayReg(regt(instr), memory->read32(addr));
@@ -476,8 +482,9 @@ void Interpreter::interpret()
 		// lhu $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 1) != 0) {
-			printf("Load alignment error!");
-			exception(ExceptionCause::LOAD_ERROR);
+			printf("Load alignment error!\n");
+			exception(ExceptionCause::LOAD_ERROR, addr);
+			break;
 		}
 		setDelayReg(regt(instr), static_cast<u32>(memory->read16(addr)));
 		break;
@@ -517,8 +524,8 @@ void Interpreter::interpret()
 		// sh $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 1) != 0) {
-			printf("Store alignment error!");
-			exception(ExceptionCause::STORE_ERROR);
+			printf("Store alignment error!\n");
+			exception(ExceptionCause::STORE_ERROR, addr);
 			break;
 		}
 		memory->write16(addr, static_cast<u16>(reg[regt(instr)]));
@@ -551,8 +558,8 @@ void Interpreter::interpret()
 		// sw $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 0b11) != 0) {
-			printf("Store alignment error!");
-			exception(ExceptionCause::STORE_ERROR);
+			printf("Store alignment error!\n");
+			exception(ExceptionCause::STORE_ERROR, addr);
 			break;
 		}
 		memory->write32(addr, reg[regt(instr)]);
@@ -591,7 +598,7 @@ void Interpreter::interpret()
 	updateDelayReg();
 }
 
-void Interpreter::exception(ExceptionCause cause)
+void Interpreter::exception(ExceptionCause cause, u32 info)
 {
 	*state->epc = currPC;
 
@@ -616,6 +623,11 @@ void Interpreter::exception(ExceptionCause cause)
 	modes_interrupts |= modes_interrupts << 2;
 
 	*state->cause = static_cast<u32>(cause) << 2;
+
+	if (cause == ExceptionCause::LOAD_ERROR || cause == ExceptionCause::STORE_ERROR) {
+		// update BadVaddr cop0 register
+		state->setCop0Reg(8, info);
+	}
 }
 
 void Interpreter::updateDelayReg()

@@ -111,6 +111,11 @@ std::string Disassembler::disassemble(u32 instr)
 			sprintf(res, "addu $r%d, $r%d, $r%d", regd(instr), regs(instr), regt(instr));
 			break;
 
+		case 0b100010:
+			// sub $rd, $rs, $rt
+			sprintf(res, "sub $r%d, $r%d, $r%d", regd(instr), regs(instr), regt(instr));
+			break;
+
 		case 0b100011:
 			// subu $rd, $rs, $rt
 			sprintf(res, "subu $r%d, $r%d, $r%d", regd(instr), regs(instr), regt(instr));

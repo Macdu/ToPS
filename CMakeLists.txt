@@ -11,9 +11,10 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(glm)
 
 SET(SOURCES 
-	src/cpu/CPU.cpp
 	src/cpu/interpreter/Disassembler.cpp
 	src/cpu/interpreter/Interpreter.cpp
+	src/cpu/CPU.cpp
+	src/cpu/CPUState.cpp
 	src/gpu/renderer/SceneRendering.cpp
 	src/gpu/renderer/VulkanRenderer.cpp
 	src/gpu/GPU.cpp

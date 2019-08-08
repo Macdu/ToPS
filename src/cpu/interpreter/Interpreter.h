@@ -15,7 +15,7 @@ public:
 	~Interpreter();
 	void init(CPU* cpu);
 	void interpret();
-	void exception(ExceptionCause cause);
+	void exception(ExceptionCause cause, u32 info = 0);
 	// called on ps1 putchar
 	void ps1_putchar(char val);
 

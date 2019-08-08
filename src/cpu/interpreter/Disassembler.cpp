@@ -68,7 +68,7 @@ std::string Disassembler::disassemble(u32 instr)
 
 		case 0b010001:
 			// mthi $rs
-			sprintf(res, "mthi r%d", regs(instr));
+			sprintf(res, "mthi $r%d", regs(instr));
 			break;
 
 		case 0b010010:

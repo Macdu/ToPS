@@ -620,7 +620,9 @@ void Interpreter::exception(ExceptionCause cause)
 
 void Interpreter::updateDelayReg()
 {
-	if (oldDelayReg->oldVal == reg[oldDelayReg->regIndex]) {
+	if (oldDelayReg->oldVal == reg[oldDelayReg->regIndex] 
+		// in case someone tries to do two consecutives loads to the same register
+		&& oldDelayReg->regIndex != currDelayReg->regIndex) {
 		reg[oldDelayReg->regIndex] = oldDelayReg->newVal;
 	}
 	// swap the delayRegs

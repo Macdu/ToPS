@@ -6,6 +6,7 @@ enum ExceptionCause {
 	LOAD_ERROR = 4,
 	STORE_ERROR = 5,
 	SYSCALL = 8,
+	BREAKPOINT = 9,
 	ARITHMETIC_OVERFLOW = 12
 };
 

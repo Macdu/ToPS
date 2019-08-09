@@ -133,6 +133,11 @@ void Interpreter::interpret()
 			exception(ExceptionCause::SYSCALL);
 			break;
 
+		case 0b001101:
+			// break code
+			exception(ExceptionCause::BREAKPOINT);
+			break;
+
 		case 0b010000:
 			// mfhi $rd
 			reg[regd(instr)] = state->hi;
@@ -214,8 +219,7 @@ void Interpreter::interpret()
 
 		case 0b100000:
 			// add $rd, $rs, $rt
-			check_overflow(reg[regs(instr)], reg[regt(instr)]);
-			reg[regd(instr)] = reg[regs(instr)] + reg[regt(instr)];
+			check_overflow(&reg[regd(instr)], reg[regs(instr)], reg[regt(instr)]);
 			break;
 
 		case 0b100001:
@@ -225,8 +229,7 @@ void Interpreter::interpret()
 
 		case 0b100010:
 			// sub $rd, $rs, $rt
-			check_overflow(reg[regs(instr)], -reg[regt(instr)]);
-			reg[regd(instr)] = reg[regs(instr)] - reg[regt(instr)];
+			check_overflow(&reg[regd(instr)], reg[regs(instr)], -reg[regt(instr)]);
 			break;
 
 		case 0b100011:
@@ -301,9 +304,23 @@ void Interpreter::interpret()
 				state->nextpc = newPCRelative(instr);
 			}
 			break;
-		default:
-			state->print();
-			assert(false);
+		default: {
+			// unofficial opcodes for some homebrews
+			if ((regt(instr) & 0b11110) == 0b10000) {
+				reg[31] = state->nextpc;
+			}
+			bool cond;
+			if ((regt(instr) & 1) == 1) {
+				// bgez behaviour
+				cond = reinterpret_cast<i32*>(reg)[regs(instr)] >= 0;
+			}
+			else {
+				cond = reinterpret_cast<i32*>(reg)[regs(instr)] < 0;
+			}
+			if (cond) {
+				state->nextpc = newPCRelative(instr);
+			}
+		}
 		}
 		break;
 	}
@@ -349,8 +366,7 @@ void Interpreter::interpret()
 
 	case 0b001000:
 		// addi $rt, $rs, imm
-		check_overflow(reg[regs(instr)], immsign(instr));
-		reg[regt(instr)] = reg[regs(instr)] + immsign(instr);
+		check_overflow(&reg[regt(instr)], reg[regs(instr)], immsign(instr));
 		break;
 
 	case 0b001001:
@@ -439,7 +455,10 @@ void Interpreter::interpret()
 	case 0b100010: {
 		// lwl $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
-		u32 val = (currDelayReg->regIndex == regt(instr)) ? currDelayReg->newVal : 0;
+		// ignore a load delay
+		u32 val = (oldDelayReg->regIndex == regt(instr)) 
+			? oldDelayReg->newVal 
+			: reg[regt(instr)];
 		u32 aligned_val = memory->read32(addr & ~3);
 
 		switch (addr & 3)
@@ -493,7 +512,9 @@ void Interpreter::interpret()
 	case 0b100110: {
 		// lwr $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
-		u32 val = (currDelayReg->regIndex == regt(instr)) ? currDelayReg->newVal : 0;
+		u32 val = (oldDelayReg->regIndex == regt(instr)) 
+			? oldDelayReg->newVal 
+			: reg[regt(instr)];
 		u32 aligned_val = memory->read32(addr & ~3);
 
 		switch (addr & 3)
@@ -632,10 +653,13 @@ void Interpreter::exception(ExceptionCause cause, u32 info)
 
 void Interpreter::updateDelayReg()
 {
-	if (oldDelayReg->oldVal == reg[oldDelayReg->regIndex] 
-		// in case someone tries to do two consecutives loads to the same register
-		&& oldDelayReg->regIndex != currDelayReg->regIndex) {
+	if (oldDelayReg->oldVal == reg[oldDelayReg->regIndex]) {
 		reg[oldDelayReg->regIndex] = oldDelayReg->newVal;
+
+		// in case someone tries to do two consecutives loads to the same register
+		if (oldDelayReg->regIndex == currDelayReg->regIndex) {
+			currDelayReg->oldVal = oldDelayReg->newVal;
+		}
 	}
 	// swap the delayRegs
 	DelayReg* temp;
@@ -656,10 +680,13 @@ inline u32 Interpreter::newPCRelative(u32 instr)
 	return state->pc + (immsign(instr) << 2);
 }
 
-void Interpreter::check_overflow(u32 a, u32 b) {
+void Interpreter::check_overflow(u32* dest, u32 a, u32 b) {
 	u32 res = a + b;
 	if (!((a ^ b) & 0x80000000) && ((a ^ res) & 0x80000000)) {
 		printf("Arithmetic overflow!\n");
 		exception(ExceptionCause::ARITHMETIC_OVERFLOW);
+	}
+	else {
+		*dest = res;
 	}
 }

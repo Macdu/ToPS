@@ -61,6 +61,11 @@ std::string Disassembler::disassemble(u32 instr)
 			sprintf(res, "syscall");
 			break;
 
+		case 0b001101:
+			// break code
+			sprintf(res, "break code");
+			break;
+
 		case 0b010000:
 			// mfhi $rd
 			sprintf(res, "mfhi $r%d", regd(instr));

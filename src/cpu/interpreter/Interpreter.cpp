@@ -219,7 +219,7 @@ void Interpreter::interpret()
 
 		case 0b100000:
 			// add $rd, $rs, $rt
-			check_overflow(&reg[regd(instr)], reg[regs(instr)], reg[regt(instr)]);
+			check_add_overflow(&reg[regd(instr)], reg[regs(instr)], reg[regt(instr)]);
 			break;
 
 		case 0b100001:
@@ -229,7 +229,7 @@ void Interpreter::interpret()
 
 		case 0b100010:
 			// sub $rd, $rs, $rt
-			check_overflow(&reg[regd(instr)], reg[regs(instr)], -reg[regt(instr)]);
+			check_sub_overflow(&reg[regd(instr)], reg[regs(instr)], reg[regt(instr)]);
 			break;
 
 		case 0b100011:
@@ -366,7 +366,7 @@ void Interpreter::interpret()
 
 	case 0b001000:
 		// addi $rt, $rs, imm
-		check_overflow(&reg[regt(instr)], reg[regs(instr)], immsign(instr));
+		check_add_overflow(&reg[regt(instr)], reg[regs(instr)], immsign(instr));
 		break;
 
 	case 0b001001:
@@ -680,10 +680,22 @@ inline u32 Interpreter::newPCRelative(u32 instr)
 	return state->pc + (immsign(instr) << 2);
 }
 
-void Interpreter::check_overflow(u32* dest, u32 a, u32 b) {
+void Interpreter::check_add_overflow(u32* dest, u32 a, u32 b) {
 	u32 res = a + b;
 	if (!((a ^ b) & 0x80000000) && ((a ^ res) & 0x80000000)) {
 		printf("Arithmetic overflow!\n");
+		exception(ExceptionCause::ARITHMETIC_OVERFLOW);
+	}
+	else {
+		*dest = res;
+	}
+}
+
+void Interpreter::check_sub_overflow(u32* dest, u32 a, u32 b)
+{
+	u32 res = a - b;
+	if (((a ^ b) & 0x80000000) && ((a ^ res) & 0x80000000)) {
+		printf("Arithmetic sub overflow!\n");
 		exception(ExceptionCause::ARITHMETIC_OVERFLOW);
 	}
 	else {

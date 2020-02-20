@@ -235,6 +235,7 @@ void Memory::write16(u32 addr, u16 value)
 		// Interrupt status/mask register+-----
 	}
 	else {
+		printf("Adress 0x%08x not writeable\n", addr);
 		throw_error("Failed to write address");
 	}
 }

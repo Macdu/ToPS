@@ -82,5 +82,6 @@ private:
 
 	inline u32 newPCRelative(u32 instr);
 
-	void check_overflow(u32* dest, u32 a, u32 b);
+	void check_add_overflow(u32* dest, u32 a, u32 b);
+	void check_sub_overflow(u32* dest, u32 a, u32 b);
 };

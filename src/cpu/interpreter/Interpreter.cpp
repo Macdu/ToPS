@@ -46,7 +46,7 @@ void Interpreter::interpret()
 	//if (state->pc == 0x800513c4)is_debugging = true;
 	assert(reg[0] == 0);
 	currPC = state->pc;
-	//if (currPC == 0x8004fadc) {
+	//if (currPC == 0x800a62d8) {
 	//	printf("Oktt!\n");
 	//}
 	u32 instr = memory->read32(currPC);
@@ -292,23 +292,20 @@ void Interpreter::interpret()
 			break;
 		case 0b10000:
 			// bltzal $rs, imm
-			reg[31] = state->nextpc;
 			if (reinterpret_cast<i32*>(reg)[regs(instr)] < 0) {
 				state->nextpc = newPCRelative(instr);
 			}
+			reg[31] = state->pc + 4;
 			break;
 		case 0b10001:
 			// bgezal $rs, imm
-			reg[31] = state->nextpc;
 			if (reinterpret_cast<i32*>(reg)[regs(instr)] >= 0) {
 				state->nextpc = newPCRelative(instr);
 			}
+			reg[31] = state->pc + 4;
 			break;
 		default: {
 			// unofficial opcodes for some homebrews
-			if ((regt(instr) & 0b11110) == 0b10000) {
-				reg[31] = state->nextpc;
-			}
 			bool cond;
 			if ((regt(instr) & 1) == 1) {
 				// bgez behaviour
@@ -319,6 +316,9 @@ void Interpreter::interpret()
 			}
 			if (cond) {
 				state->nextpc = newPCRelative(instr);
+			}
+			if ((regt(instr) & 0b11110) == 0b10000) {
+				reg[31] = state->pc + 4;
 			}
 		}
 		}
@@ -588,7 +588,7 @@ void Interpreter::interpret()
 	}
 
 	case 0b101110: {
-		// swl $rt, imm($rs)
+		// swr $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		u32 val = memory->read32(addr & ~3);
 		switch (addr & 3) {

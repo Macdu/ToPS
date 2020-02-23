@@ -119,13 +119,14 @@ void Interpreter::interpret()
 
 		case 0b001001:
 			// jalr $rd, $rs
-			reg[regd(instr)] = state->nextpc;
 			if ((reg[regs(instr)] & 0b11) != 0) {
 				printf("PC alignment error!\n");
 				exception(ExceptionCause::LOAD_ERROR, reg[regs(instr)]);
+				reg[regd(instr)] = currPC + 8;
 				break;
 			}
 			state->nextpc = reg[regs(instr)];
+			reg[regd(instr)] = state->pc + 4;
 			break;
 
 		case 0b001100:
@@ -422,8 +423,9 @@ void Interpreter::interpret()
 		case 0b10000: {
 			// rfe
 			assert((instr & 0x3f) == 0b010000);
+			// all the KU and IE bits of the status register are shifted to the right
 			u32 modes_interrupts = *state->sr & 0x3f;
-			*state->sr &= ~0x3f;
+			*state->sr &= ~0xf;
 			*state->sr |= modes_interrupts >> 2;
 			break;
 		}
@@ -623,10 +625,12 @@ void Interpreter::exception(ExceptionCause cause, u32 info)
 {
 	*state->epc = currPC;
 
+	*state->cause = static_cast<u32>(cause) << 2;
+
 	// If in branch delay
 	if (state->pc + 4 != state->nextpc) {
 		*state->epc -= 4;
-		*state->epc |= 1 << 31;
+		*state->cause |= 1 << 31;
 	}
 
 	// BEV bit
@@ -640,10 +644,9 @@ void Interpreter::exception(ExceptionCause cause, u32 info)
 
 	// shifting of kernel user and interrupt enable bits
 	u32 modes_interrupts = *state->sr & 0xf;
-	modes_interrupts &= ~0x3f;
-	modes_interrupts |= modes_interrupts << 2;
+	*state->sr &= ~0x3f;
+	*state->sr |= modes_interrupts << 2;
 
-	*state->cause = static_cast<u32>(cause) << 2;
 
 	if (cause == ExceptionCause::LOAD_ERROR || cause == ExceptionCause::STORE_ERROR) {
 		// update BadVaddr cop0 register

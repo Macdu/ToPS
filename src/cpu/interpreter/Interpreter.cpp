@@ -109,7 +109,7 @@ void Interpreter::interpret()
 			// jr $rs
 			u32 addr = reg[regs(instr)];
 			if ((addr & 0b11) != 0) {
-				printf("PC alignment error!\n");
+				// printf("PC alignment error!\n");
 				exception(ExceptionCause::LOAD_ERROR, addr);
 				break;
 			}
@@ -120,7 +120,7 @@ void Interpreter::interpret()
 		case 0b001001:
 			// jalr $rd, $rs
 			if ((reg[regs(instr)] & 0b11) != 0) {
-				printf("PC alignment error!\n");
+				// printf("PC alignment error!\n");
 				exception(ExceptionCause::LOAD_ERROR, reg[regs(instr)]);
 				reg[regd(instr)] = currPC + 8;
 				break;
@@ -446,7 +446,7 @@ void Interpreter::interpret()
 		// lh $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 1) != 0) {
-			printf("Load alignment16 error!\n");
+			// printf("Load alignment16 error!\n");
 			exception(ExceptionCause::LOAD_ERROR, addr);
 			break;
 		}
@@ -486,7 +486,7 @@ void Interpreter::interpret()
 		// lw $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 0b11) != 0) {
-			printf("Load alignment error!\n");
+			// printf("Load alignment error!\n");
 			exception(ExceptionCause::LOAD_ERROR, addr);
 			break;
 		}
@@ -503,7 +503,7 @@ void Interpreter::interpret()
 		// lhu $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 1) != 0) {
-			printf("Load alignment error!\n");
+			// printf("Load alignment error!\n");
 			exception(ExceptionCause::LOAD_ERROR, addr);
 			break;
 		}
@@ -547,7 +547,7 @@ void Interpreter::interpret()
 		// sh $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 1) != 0) {
-			printf("Store alignment error!\n");
+			// printf("Store alignment error!\n");
 			exception(ExceptionCause::STORE_ERROR, addr);
 			break;
 		}
@@ -581,7 +581,7 @@ void Interpreter::interpret()
 		// sw $rt, imm($rs)
 		u32 addr = reg[regs(instr)] + immsign(instr);
 		if ((addr & 0b11) != 0) {
-			printf("Store alignment error!\n");
+			// printf("Store alignment error!\n");
 			exception(ExceptionCause::STORE_ERROR, addr);
 			break;
 		}
@@ -660,9 +660,9 @@ void Interpreter::updateDelayReg()
 		reg[oldDelayReg->regIndex] = oldDelayReg->newVal;
 
 		// in case someone tries to do two consecutives loads to the same register
-		if (oldDelayReg->regIndex == currDelayReg->regIndex) {
-			currDelayReg->oldVal = oldDelayReg->newVal;
-		}
+		// if (oldDelayReg->regIndex == currDelayReg->regIndex) {
+		//	currDelayReg->oldVal = oldDelayReg->newVal;
+		// }
 	}
 	// swap the delayRegs
 	DelayReg* temp;
@@ -686,7 +686,7 @@ inline u32 Interpreter::newPCRelative(u32 instr)
 void Interpreter::check_add_overflow(u32* dest, u32 a, u32 b) {
 	u32 res = a + b;
 	if (!((a ^ b) & 0x80000000) && ((a ^ res) & 0x80000000)) {
-		printf("Arithmetic overflow!\n");
+		// printf("Arithmetic overflow!\n");
 		exception(ExceptionCause::ARITHMETIC_OVERFLOW);
 	}
 	else {
@@ -698,7 +698,7 @@ void Interpreter::check_sub_overflow(u32* dest, u32 a, u32 b)
 {
 	u32 res = a - b;
 	if (((a ^ b) & 0x80000000) && ((a ^ res) & 0x80000000)) {
-		printf("Arithmetic sub overflow!\n");
+		// printf("Arithmetic sub overflow!\n");
 		exception(ExceptionCause::ARITHMETIC_OVERFLOW);
 	}
 	else {

@@ -41,6 +41,9 @@ private:
 	DelayReg* oldDelayReg;
 
 	void setDelayReg(u32 regIndex, u32 val) {
+		if (regIndex == oldDelayReg->regIndex) {
+			oldDelayReg->regIndex = 0;
+		}
 		currDelayReg->regIndex = regIndex;
 		currDelayReg->oldVal = reg[regIndex];
 		currDelayReg->newVal = val;

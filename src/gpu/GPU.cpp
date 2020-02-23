@@ -497,9 +497,12 @@ void GPU::dot()
 {
 	Color color = readColor();
 	Point<i16> vertex = readPoint();
-	for (int i = 0; i < 3; i++) {
-		pushVertexColor(vertex, color);
-	}
+	// for (int i = 0; i < 3; i++) {
+	// 	pushVertexColor(vertex, color);
+	// }
+	pushVertexColor(vertex, color);
+	pushVertexColor({ vertex.x + 2, vertex.y }, color);
+	pushVertexColor({ vertex.x, vertex.y + 2 }, color);
 }
 
 void GPU::sendRectToFrameBuffer()

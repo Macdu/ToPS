@@ -8,14 +8,12 @@
 class Emulator;
 
 class RenderWindow : public QWindow {
-	Q_OBJECT
 
 public:
 	bool rendering = false;
 
 	RenderWindow(Emulator* emu);
 
-public slots:
 	void renderLater();
 	void renderNow();
 	void release();
@@ -27,6 +25,10 @@ protected:
 
 	bool event(QEvent *event) override;
 	void exposeEvent(QExposeEvent *event) override;
+	void keyPressEvent(QKeyEvent* event) override;
+	void keyReleaseEvent(QKeyEvent* event) override;
+
 public:
 	void init();
+	void handleKey(int keyCode, bool isPressed);
 };

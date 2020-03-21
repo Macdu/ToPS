@@ -5,6 +5,8 @@
 #include "RAM.h"
 #include "DMA.h"
 #include "gpu/GPU.h"
+#include "Controller.h"
+#include "Interrupt.h"
 
 class RenderWindow;
 
@@ -28,17 +30,24 @@ public:
 	// Executes the emulator until a frame is rendered
 	void renderFrame();
 
+	// Executes when a key is pressed or released
+	void handleInput(ControllerKey key, bool isPressed);
+
 	Bios* getBios() { return &bios; };
 	RAM* getRam() { return &ram; };
 	CPU* getCPU() { return &cpu; };
 	DMA* getDMA() { return &dma; };
 	GPU* getGPU() { return &gpu; };
+	Controller* getController() { return &controller; };
+	Interrupt* getInterrupt() { return &interrupt; };
 
 private:
 	CPU cpu;
+	Interrupt interrupt;
 	Bios bios;
 	RAM ram;
 	DMA dma;
 	GPU gpu;
+	Controller controller;
 	RenderWindow* renderSurface;
 };

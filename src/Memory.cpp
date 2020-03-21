@@ -4,11 +4,14 @@
 
 void Memory::init(Emulator * emu)
 {
+	interrupt = emu->getInterrupt();
 	bios = emu->getBios();
 	ram = emu->getRam();
 	state = emu->getCPU()->getState();
 	dma = emu->getDMA();
 	gpu = emu->getGPU();
+	controller = emu->getController();
+	controller->init(emu);
 }
 
 
@@ -98,9 +101,13 @@ u16 Memory::read16(u32 addr) const
 		// SPU
 		return 0;
 	}
-	else if (addr == 0x1F801070 || addr == 0x1F801074) {
-		// Interrupt registers
-		return 0;
+	else if (addr == 0x1F80104A) {
+		// JOY_CTRL
+		return controller->getJoyControl();
+	}
+	else if (addr == 0x1F801074) {
+		// I_MASK
+		return interrupt->interruptMask;
 	}
 	throw_error("Failed to read address");
 }
@@ -123,6 +130,10 @@ u8 Memory::read8(u32 addr) const
 	else if (addr >= 0x1f000000 && addr - 0x1f000000 < 0x100) {
 		// Expansion 1
 		return 0xFF;
+	}
+	else if (addr == 0x1F801040) {
+		// JOY_RX_DATA
+		return controller->readData();
 	}
 	throw_error("Fail to read address");
 }
@@ -222,6 +233,14 @@ void Memory::write16(u32 addr, u16 value)
 		// Scratchpad
 		ram->write16Scratchpad(addr - 0x1F800000, value);
 	}
+	else if (addr == 0x1F80104A) {
+		// JOY_CTRL 
+		controller->setJoyControl(value);
+	}
+	else if (addr == 0x1F801074) {
+		// I_MASK
+		interrupt->setInterruptMask(value);
+	}
 	else if (addr >= 0x1F801D80 && addr < 0x1F802000) {
 		// SPU
 	}
@@ -230,9 +249,6 @@ void Memory::write16(u32 addr, u16 value)
 	}
 	else if (addr >= 0x1f801c00 && addr < 0x1F801D80) {
 		// SPU
-	}
-	else if (addr >= 0x1F801070 && addr < 0x1F801078) {
-		// Interrupt status/mask register+-----
 	}
 	else {
 		printf("Adress 0x%08x not writeable\n", addr);
@@ -261,6 +277,10 @@ void Memory::write8(u32 addr, u8 value)
 	}
 	else if (addr >= 0x1F802000 && addr < 0x1F802060) {
 		// Expansion Region 2 - Int/Dip/Post
+	}
+	else if (addr == 0x1F801040) {
+		// JOY_TX_DATA
+		controller->sendData(value);
 	}
 	else {
 		throw_error("Failed to write address");

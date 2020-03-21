@@ -21,8 +21,10 @@ SET(SOURCES
 	src/qt/MainWindow.cpp
 	src/qt/RenderWindow.cpp
 	src/Bios.cpp
+	src/Controller.cpp
 	src/DMA.cpp
 	src/Emulator.cpp
+	src/Interrupt.cpp
 	src/Memory.cpp
 	src/RAM.cpp
 	main.cpp
@@ -43,7 +45,9 @@ SET(HEADERS
 	src/Bios.h
 	src/definitions.h
 	src/DMA.h
+	src/Controller.h
 	src/Emulator.h
+	src/Interrupt.h
 	src/Memory.cpp
 	src/RAM.h
 )

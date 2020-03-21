@@ -13,6 +13,7 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	dma.ram = &ram;
 	dma.gpu = &gpu;
 	gpu.emu = this;
+	interrupt.init(&cpu);
 	gpu.init(instance, surface);
 	importBIOS();
 
@@ -109,8 +110,18 @@ void Emulator::renderFrame()
 
 		// a cpu cycle happens every 3 PS1 clock cycle
 		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline / 3; cpuCycle++) {
-			cpu.step();
+			int prevCycle = cpuCycle;
+			for (; cpuCycle < std::max(GPU::cyclesPerScanline / 3,prevCycle + 100); cpuCycle++) {
+				cpu.step();
+			}
+			// check for interrupts every 100 cycle
+			controller.checkIRQ();
 		}
 	}
 	
+}
+
+void Emulator::handleInput(ControllerKey key, bool isPressed)
+{
+	controller.handleInput(key, isPressed);
 }

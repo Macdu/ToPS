@@ -2,11 +2,13 @@
 
 #include "definitions.h"
 
+class Interrupt;
 class Bios;
 class Emulator;
 class RAM;
 class DMA;
 class GPU;
+class Controller;
 struct CPUState;
 
 class Memory {
@@ -22,9 +24,11 @@ public:
 
 private:
 	u32 removeRegion(u32 addr) const;
+	Interrupt* interrupt;
 	Bios* bios;
 	RAM* ram;
 	DMA* dma;
 	CPUState* state;
 	GPU* gpu;
+	Controller* controller;
 };

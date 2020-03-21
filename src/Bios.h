@@ -5,7 +5,7 @@
 // implement the bios
 class Bios {
 public:
-	static const int BIOS_SIZE = 512 * 1024;
+	static constexpr int BIOS_SIZE = 512 * 1024;
 
 	void load(u8 content[]);
 

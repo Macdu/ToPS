@@ -3,6 +3,7 @@
 #include "../definitions.h"
 
 enum ExceptionCause {
+	INTERRUPT = 0,
 	LOAD_ERROR = 4,
 	STORE_ERROR = 5,
 	SYSCALL = 8,

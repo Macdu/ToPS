@@ -4,6 +4,7 @@
 
 void CPU::init(Emulator * emu)
 {
+	clockCycle = 0;
 	this->emu = emu;
 	interpreter.init(this);
 	memory.init(emu);
@@ -22,5 +23,11 @@ Memory * CPU::getMemory()
 
 void CPU::step()
 {
+	clockCycle++;
 	interpreter.interpret();
+}
+
+void CPU::requestInterrupt()
+{
+	interpreter.exception(ExceptionCause::INTERRUPT);
 }

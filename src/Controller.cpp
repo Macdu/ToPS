@@ -51,7 +51,7 @@ void Controller::sendTransferBuffer()
 void Controller::handleInput(ControllerKey key, bool isPressed)
 {
 	//printf("%d -> %d\n", (int)key, (int)isPressed);
-	bool correspondingBit = (1 << ((int)key));
+	u16 correspondingBit = (1 << ((int)key));
 	controllerState.val &= ~correspondingBit;
 	controllerState.val |= correspondingBit * isPressed;
 }

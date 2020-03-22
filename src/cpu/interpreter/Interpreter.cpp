@@ -66,7 +66,7 @@ void Interpreter::interpret()
 	switch (opcode)
 	{
 	case 0b000000: {
-		// opcode secial
+		// opcode special
 		switch (func(instr)) {
 		case 0b000000: {
 			// ignore nop case ?

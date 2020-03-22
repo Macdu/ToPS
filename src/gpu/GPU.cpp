@@ -155,7 +155,7 @@ inline void GPU::pushVertexTexture(const Point<i16>& point, const Point<u8>& tex
 }
 
 void GPU::drawFrame() {
-	printf("Drawing frame.\n");
+	//printf("Drawing frame.\n");
 	renderer.drawFrame();
 	// keep only the read to render screen rendering
 	renderer.sceneRendering.verticesToRenderSize = 6;

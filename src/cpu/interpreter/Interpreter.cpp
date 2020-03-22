@@ -35,6 +35,7 @@ void Interpreter::init(CPU * cpu)
 	this->cpu = cpu;
 	this->memory = cpu->getMemory();
 	this->state = cpu->getState();
+	this->gte = cpu->getGTE();
 	this->reg = this->state->registers;
 	this->oldDelayReg = new DelayReg();
 	this->currDelayReg = new DelayReg();
@@ -406,7 +407,7 @@ void Interpreter::interpret()
 		break;
 
 	case 0b010000: {
-		// coprocessor instruction
+		// coprocessor0 instruction
 		switch (regs(instr))
 		{
 		case 0b00000: 
@@ -415,10 +416,11 @@ void Interpreter::interpret()
 			break;
 
 		case 0b00100: {
-			// mtc0 $rt, $rd
+			// mtc0 $rt, $cop0_rd
 			assert(imm11(instr) == 0);
 			state->setCop0Reg(regd(instr), reg[regt(instr)]);
 			break;
+		}
 
 		case 0b10000: {
 			// rfe
@@ -433,6 +435,43 @@ void Interpreter::interpret()
 		default:
 			throw_error("Undefined coprocessor opcode!");
 		}
+		break;
+	}
+
+	case 0b010010: {
+		// COP2 instruction
+		if ((instr & (1 << 25)) == 0) {
+			switch (regs(instr))
+			{
+				
+			case 0b00000:
+				// mfc2 $rt, $cpo2_datad
+				setDelayReg(regt(instr), gte->data[regd(instr)]);
+				break;
+
+			case 0b00010:
+				// cfc2 $rt, $cpo2_ctrld
+				setDelayReg(regt(instr), gte->ctrl[regd(instr)]);
+				break;
+
+			case 0b00100: 
+				// mtc2 $rt, $cop2_datad
+				assert(imm11(instr) == 0);
+				gte->data[regd(instr)] = reg[regt(instr)];
+				break;
+
+			case 0b00110:
+				// ctc2 $rt, $cop2_ctrld
+				assert(imm11(instr) == 0);
+				gte->ctrl[regd(instr)] = reg[regt(instr)];
+				break;
+
+			default:
+				throw_error("Undefined COP2 opcode!");
+			}
+		}
+		else {
+			throw_error("COP2 cmd not implemented!");
 		}
 		break;
 	}

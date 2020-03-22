@@ -11,6 +11,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(glm)
 
 SET(SOURCES 
+	src/cpu/gte/GTE.cpp
 	src/cpu/interpreter/Disassembler.cpp
 	src/cpu/interpreter/Interpreter.cpp
 	src/cpu/CPU.cpp
@@ -31,6 +32,7 @@ SET(SOURCES
 )
 
 SET(HEADERS 
+	src/cpu/gte/GTE.h
 	src/cpu/CPU.h
 	src/cpu/CPUState.h
 	src/cpu/interpreter/Disassembler.h

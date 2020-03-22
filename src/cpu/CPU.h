@@ -3,6 +3,7 @@
 #include "../Memory.h"
 #include "interpreter/Interpreter.h"
 #include "CPUState.h"
+#include "gte/GTE.h"
 
 class Emulator;
 
@@ -17,6 +18,7 @@ public:
 	// run one cpu instruction
 	void step();
 	CPUState* getState() { return &state; };
+	GTE* getGTE() { return &gte; };
 	void requestInterrupt();
 
 private:
@@ -24,4 +26,5 @@ private:
 	Memory memory;
 	Interpreter interpreter;
 	CPUState state;
+	GTE gte;
 };

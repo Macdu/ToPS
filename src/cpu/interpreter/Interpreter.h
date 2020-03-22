@@ -5,6 +5,7 @@
 class CPU;
 class Memory;
 struct CPUState;
+class GTE;
 enum ExceptionCause;
 
 void setDebugging(bool state);
@@ -24,6 +25,7 @@ private:
 	CPU* cpu;
 	Memory* memory;
 	CPUState* state;
+	GTE* gte;
 	u32* reg;
 	u32 currPC;
 

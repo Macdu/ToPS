@@ -263,7 +263,7 @@ std::string Disassembler::disassemble(u32 instr)
 
 		case 0b00100: {
 			// mtc0 $rt, $cop0_rd
-			sprintf(res, "mtco $r%d $cop0_r%d", regt(instr), regd(instr));
+			sprintf(res, "mtc0 $r%d $cop0_r%d", regt(instr), regd(instr));
 			break;
 
 		case 0b10000:
@@ -273,6 +273,38 @@ std::string Disassembler::disassemble(u32 instr)
 		}
 		default:
 			break;
+		}
+		break;
+	}
+
+	case 0b010010: {
+		// COP2 instruction
+		if ((instr & (1 << 25)) == 0) {
+			switch (regs(instr))
+			{
+			case 0b00000: {
+				// mfc2 $rt, $cop0_rd
+				sprintf(res, "mfc0 $r%d $cop2_d%d", regt(instr), regd(instr));
+				break;
+			}
+
+			case 0b00100: {
+				// mtc2 $rt, $cop0_rd
+				sprintf(res, "mtc2 $r%d $cop2_d%d", regt(instr), regd(instr));
+				break;
+			}
+
+			case 0b00110: {
+				// ctc2 $rt, $cop0_rd
+				sprintf(res, "ctc2 $r%d $cop2_c%d", regt(instr), regd(instr));
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		else {
+
 		}
 		break;
 	}

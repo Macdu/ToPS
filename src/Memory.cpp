@@ -105,6 +105,10 @@ u16 Memory::read16(u32 addr) const
 		// JOY_CTRL
 		return controller->getJoyControl();
 	}
+	else if (addr == 0x1F801070) {
+		// I_STAT
+		return interrupt->interruptStatus;
+	}
 	else if (addr == 0x1F801074) {
 		// I_MASK
 		return interrupt->interruptMask;
@@ -236,6 +240,10 @@ void Memory::write16(u32 addr, u16 value)
 	else if (addr == 0x1F80104A) {
 		// JOY_CTRL 
 		controller->setJoyControl(value);
+	}
+	else if (addr == 0x1F801070) {
+		// I_STAT
+		interrupt->setInterruptStatus(value);
 	}
 	else if (addr == 0x1F801074) {
 		// I_MASK

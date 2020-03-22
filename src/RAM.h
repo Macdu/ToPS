@@ -4,8 +4,9 @@
 
 class RAM {
 public:
-	static const int RAM_SIZE = 2048 * 1024;
-	static const int SCRATCHPAD_SIZE = 1024;
+	// the first 2 MB of RAM are mirrored 3 other times
+	static constexpr int RAM_SIZE = 2048 * 1024 * 4;
+	static constexpr int SCRATCHPAD_SIZE = 1024;
 
 	u32 load32Ram(u32 offset);
 	u16 load16Ram(u32 offset);
@@ -23,4 +24,5 @@ public:
 private:
 	u32 ram[RAM_SIZE / 4];
 	u32 scratchpad[SCRATCHPAD_SIZE / 4];
+	static constexpr int ram_mask = 2048 * 1024 - 1;
 };

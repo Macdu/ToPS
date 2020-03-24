@@ -283,19 +283,25 @@ std::string Disassembler::disassemble(u32 instr)
 			switch (regs(instr))
 			{
 			case 0b00000: {
-				// mfc2 $rt, $cop0_rd
-				sprintf(res, "mfc0 $r%d $cop2_d%d", regt(instr), regd(instr));
+				// mfc2 $rt, $cop2_rd
+				sprintf(res, "mfc2 $r%d $cop2_d%d", regt(instr), regd(instr));
+				break;
+			}
+
+			case 0b00010: {
+				// cfc2 $rt, $cop2_rd
+				sprintf(res, "cfc2 $r%d $cop2_c%d", regt(instr), regd(instr));
 				break;
 			}
 
 			case 0b00100: {
-				// mtc2 $rt, $cop0_rd
+				// mtc2 $rt, $cop2_rd
 				sprintf(res, "mtc2 $r%d $cop2_d%d", regt(instr), regd(instr));
 				break;
 			}
 
 			case 0b00110: {
-				// ctc2 $rt, $cop0_rd
+				// ctc2 $rt, $cop2_rd
 				sprintf(res, "ctc2 $r%d $cop2_c%d", regt(instr), regd(instr));
 				break;
 			}

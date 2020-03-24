@@ -1,6 +1,5 @@
 #include "Emulator.h"
 
-#include <Windows.h>
 #include <cstdio>
 
 #include "definitions.h"

@@ -47,7 +47,7 @@ void Interpreter::interpret()
 	//if (state->pc == 0x800513c4)is_debugging = true;
 	assert(reg[0] == 0);
 	currPC = state->pc;
-	//if (currPC == 0x800a62d8) {
+	//if (currPC == 0x80026804) {
 	//	printf("Oktt!\n");
 	//}
 	u32 instr = memory->read32(currPC);
@@ -446,24 +446,24 @@ void Interpreter::interpret()
 				
 			case 0b00000:
 				// mfc2 $rt, $cpo2_datad
-				setDelayReg(regt(instr), gte->data[regd(instr)]);
+				setDelayReg(regt(instr),gte->getData(regd(instr)));
 				break;
 
 			case 0b00010:
 				// cfc2 $rt, $cpo2_ctrld
-				setDelayReg(regt(instr), gte->ctrl[regd(instr)]);
+				setDelayReg(regt(instr), gte->getControl(regd(instr)));
 				break;
 
 			case 0b00100: 
 				// mtc2 $rt, $cop2_datad
 				assert(imm11(instr) == 0);
-				gte->data[regd(instr)] = reg[regt(instr)];
+				gte->setData(regd(instr), reg[regt(instr)]);
 				break;
 
 			case 0b00110:
 				// ctc2 $rt, $cop2_ctrld
 				assert(imm11(instr) == 0);
-				gte->ctrl[regd(instr)] = reg[regt(instr)];
+				gte->setControl(regd(instr), reg[regt(instr)]);
 				break;
 
 			default:

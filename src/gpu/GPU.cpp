@@ -9,6 +9,7 @@ void GPU::initGP0Opcodes()
 	std::fill_n(gp0_opcodes_length, 256, -1);
 	gp0_opcodes_length[0x00] = 1;
 	gp0_opcodes_length[0x01] = 1;
+	gp0_opcodes_length[0x02] = 3;
 
 	gp0_opcodes_length[0x2C] = 9;
 	gp0_opcodes_length[0x28] = 5;
@@ -171,7 +172,6 @@ void GPU::drawFrame() {
 void GPU::pushCmdGP0(u32 val)
 {
 	if (isSendingImage) {
-		// special case, ignore it for now
 		reinterpret_cast<u32*>(imageTransfer)[currentImageSize >> 1] = val;
 		currentImageSize += 2;
 		if (currentImageSize == totalImageSize) {
@@ -213,6 +213,11 @@ void GPU::gp0(u32 cmd, u32 opcode)
 
 	case 0x01:
 		// Clear cache
+		break;
+
+	case 0x02:
+		// frame buffer rectangle draw
+		rectangleDraw();
 		break;
 
 	case 0x28:
@@ -386,6 +391,30 @@ void GPU::gp1(u32 cmd)
 		printf("Opcode 0x%02x for cmd 0x%08x GP1 not valid\n", opcode, cmd);
 		throw_error("Unrecognized opcode!");
 	}
+}
+
+void GPU::rectangleDraw()
+{
+	// I just "disable" the current scissor and then draw the rectangle
+	// as a monochrome quad
+	Color color = readColor();
+	Point<i16> topLeft = readPoint();
+	Point<i16> size = readPoint();
+	vk::Rect2D currScissor = renderer.sceneRendering.currentScissor;
+	renderer.sceneRendering.setScissor(renderer.sceneRendering.frameScissor);
+	Point<i16> points[4] = {
+		topLeft,
+		{topLeft.x + size.x, topLeft.y},
+		{topLeft.x + size.x, topLeft.y + size.y},
+		{topLeft.x, topLeft.y + size.y}
+	};
+	for (int i = 0; i < 3; i++) {
+		pushVertexColor(points[i], color);
+	}
+	for (int i = 1; i < 4; i++) {
+		pushVertexColor(points[i], color);
+	}
+	renderer.sceneRendering.setScissor(currScissor);
 }
 
 void GPU::textured4Points()

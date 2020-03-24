@@ -55,6 +55,9 @@ public:
 	std::vector<std::pair<u32, vk::Rect2D>> verticesRenderScissors;
 	vk::Rect2D currentScissor = { {0,0}, {0,0} };
 
+	// Scissor containing the whole frame (same as no scissor)
+	const vk::Rect2D frameScissor = { {0,0}, {1024,512} };
+
 	vk::Fence renderFence;
 	vk::Semaphore verticesRenderedSemaphore;
 	vk::Semaphore copyToReadImgReady;
@@ -62,6 +65,7 @@ public:
 
 	// update the current scissor based on the new gpuProps drawing area
 	void updateDrawingArea();
+	void setScissor(const vk::Rect2D& newScissor);
 
 	void init(VulkanRenderer* renderer);
 

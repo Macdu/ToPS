@@ -33,6 +33,11 @@ void SceneRendering::updateDrawingArea()
 		(u32)renderer->gpuProps->drawingAreaBottom - newScissor.offset.y + 1
 	};
 
+	setScissor(newScissor);
+}
+
+void SceneRendering::setScissor(const vk::Rect2D& newScissor)
+{
 	if (newScissor != currentScissor) {
 		// update scissor
 		if (verticesRenderScissors.back().first != verticesToRenderSize - 1) {

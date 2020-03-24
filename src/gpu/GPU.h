@@ -43,6 +43,10 @@ public:
 	// execute a gp1 cmd
 	void gp1(u32 cmd);
 
+	// Draws a monochrome rectangle directly to the framebuffer
+	// Ignores all environment settings
+	void rectangleDraw();
+
 	void textured4Points();
 	void monochrome4Points();
 	void shaded4points();

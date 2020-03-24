@@ -136,6 +136,7 @@ public:
 	void init(Emulator* emu);
 	void setJoyControl(u16 value);
 	u16 getJoyControl() { return joyControl.val; };
+	u32 getJoyStat() { return joyStat.val; };
 	void handleInput(ControllerKey key, bool isPressed);
 	// checks if an irq needs to be set
 	void checkIRQ();

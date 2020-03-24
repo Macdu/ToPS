@@ -101,6 +101,10 @@ u16 Memory::read16(u32 addr) const
 		// SPU
 		return 0;
 	}
+	else if (addr == 0x1F801044) {
+		// JOY_STAT
+		return (u16)controller->getJoyStat();
+	}
 	else if (addr == 0x1F80104A) {
 		// JOY_CTRL
 		return controller->getJoyControl();
@@ -237,9 +241,17 @@ void Memory::write16(u32 addr, u16 value)
 		// Scratchpad
 		ram->write16Scratchpad(addr - 0x1F800000, value);
 	}
+	else if (addr == 0x1F801048) {
+		// JOY_MODE 
+		// ignore it for now
+	}
 	else if (addr == 0x1F80104A) {
 		// JOY_CTRL 
 		controller->setJoyControl(value);
+	}
+	else if (addr == 0x1F80104E) {
+		// JOY_BAUD
+		// ignore it for now
 	}
 	else if (addr == 0x1F801070) {
 		// I_STAT

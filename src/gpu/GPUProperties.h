@@ -4,6 +4,8 @@
 
 // all the GPU properties, some can be accessed through 0x1F801814 (GPUSTAT)
 struct GPUProperties {
+	// default texture page used when one is not specified by the cmd (ex: textured rect)
+	u16 texturePageDefault;
 	// bit 0-3, multiplied by 64
 	u32 texturePageXBase;
 	// bit 4, multiplied by 256
@@ -154,6 +156,7 @@ struct GPUProperties {
 
 	// called after GP0 0xE1 cmd
 	void setDrawModeSetting(u32 cmd) {
+		texturePageDefault = (u16)cmd;
 		texturePageXBase = (cmd & 0xF) * 64;
 		texturePageYBase = (cmd & 0x10) << 4;
 		semiTransparency = (cmd >> 5) & 3;

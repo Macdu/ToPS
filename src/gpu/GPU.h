@@ -51,7 +51,9 @@ public:
 	void monochrome4Points();
 	void shaded4points();
 	void shadedTriangle();
+	void rectangle();
 	void dot();
+	void sprite();
 
 	void sendRectToFrameBuffer();
 	void sendFrameBufferToCPU();
@@ -88,5 +90,16 @@ private:
 
 	inline Point<u8> extractTextLoc(const u32& word) {
 		return { (u8)word, (u8)(word >> 8) };
+	}
+
+	// get the 4 points of a rectangle from the topLeft point, the width and the height
+	template<typename T> inline std::array<Point<T>,4> getRectangle(Point<T> topLeft, Point<T> size) {
+		auto add = std::plus<T>();
+		return {
+			topLeft,
+			{add(topLeft.x,size.x), topLeft.y},
+			{add(topLeft.x, size.x), add(topLeft.y, size.y)},
+			{topLeft.x, add(topLeft.y, size.y)}
+		};
 	}
 };

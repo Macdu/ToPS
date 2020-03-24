@@ -16,6 +16,8 @@ void GPU::initGP0Opcodes()
 	gp0_opcodes_length[0x30] = 6;
 	gp0_opcodes_length[0x38] = 8;
 
+	gp0_opcodes_length[0x60] = 3;
+	gp0_opcodes_length[0x64] = 4;
 	gp0_opcodes_length[0x68] = 2;
 
 	gp0_opcodes_length[0xA0] = 3;
@@ -240,6 +242,16 @@ void GPU::gp0(u32 cmd, u32 opcode)
 		shaded4points();
 		break;
 
+	case 0x60:
+		// rectangle
+		rectangle();
+		break;
+
+	case 0x64:
+		// sprite
+		sprite();
+		break;
+
 	case 0x68:
 		// dot
 		dot();
@@ -396,24 +408,9 @@ void GPU::gp1(u32 cmd)
 void GPU::rectangleDraw()
 {
 	// I just "disable" the current scissor and then draw the rectangle
-	// as a monochrome quad
-	Color color = readColor();
-	Point<i16> topLeft = readPoint();
-	Point<i16> size = readPoint();
 	vk::Rect2D currScissor = renderer.sceneRendering.currentScissor;
 	renderer.sceneRendering.setScissor(renderer.sceneRendering.frameScissor);
-	Point<i16> points[4] = {
-		topLeft,
-		{topLeft.x + size.x, topLeft.y},
-		{topLeft.x + size.x, topLeft.y + size.y},
-		{topLeft.x, topLeft.y + size.y}
-	};
-	for (int i = 0; i < 3; i++) {
-		pushVertexColor(points[i], color);
-	}
-	for (int i = 1; i < 4; i++) {
-		pushVertexColor(points[i], color);
-	}
+	rectangle();
 	renderer.sceneRendering.setScissor(currScissor);
 }
 
@@ -522,6 +519,22 @@ void GPU::shadedTriangle()
 	printf("Draw shaded triangle\n");
 }
 
+void GPU::rectangle()
+{
+	// just draw it as a monochrome quad
+	Color color = readColor();
+	Point<i16> topLeft = readPoint();
+	Point<i16> size = readPoint();
+	std::array<Point<i16>, 4> points = getRectangle(topLeft, size);
+	
+	for (int i = 0; i < 3; i++) {
+		pushVertexColor(points[i], color);
+	}
+	for (int i = 1; i < 4; i++) {
+		pushVertexColor(points[i], color);
+	}
+}
+
 void GPU::dot()
 {
 	Color color = readColor();
@@ -532,6 +545,33 @@ void GPU::dot()
 	pushVertexColor(vertex, color);
 	pushVertexColor({ vertex.x + 2, vertex.y }, color);
 	pushVertexColor({ vertex.x, vertex.y + 2 }, color);
+}
+
+void GPU::sprite()
+{
+	Point<i16> topLeft;
+	Point<i16> size;
+	Point<u8> textLoc;
+	u16 clutID;
+	u32 word;
+	// Command + color
+	gp0Queue.pop();
+	topLeft = readPoint();
+	// CULT ID + texture coordinates vertex 0
+	word = gp0Queue.front();
+	gp0Queue.pop();
+	clutID = word >> 16;
+	textLoc = extractTextLoc(word);
+	size = readPoint();
+	std::array<Point<i16>, 4> vertices = getRectangle(topLeft, size);
+	std::array<Point<u8>, 4> textLocs = getRectangle<u8>(textLoc, { (u8)size.x, (u8)size.y });
+
+	for (int i = 0; i < 3; i++) {
+		pushVertexTexture(vertices[i], textLocs[i], clutID, gpuProps.texturePageDefault);
+	}
+	for (int i = 1; i < 4; i++) {
+		pushVertexTexture(vertices[i], textLocs[i], clutID, gpuProps.texturePageDefault);
+	}
 }
 
 void GPU::sendRectToFrameBuffer()

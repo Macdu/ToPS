@@ -34,18 +34,32 @@ void Controller::sendTransferBuffer()
 	isExchanging = true;
 	if (receptionBuffer.empty()) {
 		// start new emission
-		if (transferBuffer != 0x01) {
+		if (transferBuffer == 0x01) {
+			// controller transfer
+			receptionBuffer.push(0xAA);
+			receptionBuffer.push(0x41);
+			receptionBuffer.push(0x5A);
+			// 0 = pressed, 1 = released
+			receptionBuffer.push(~controllerState.val);
+			receptionBuffer.push(~(controllerState.val >> 8));
+		}
+		else if (transferBuffer == 0x81) {
 			throw_error("Memory card access not implemented!");
 		}
-		receptionBuffer.push(0xAA);
-		receptionBuffer.push(0x41);
-		receptionBuffer.push(0x5A);
-		// 0 = pressed, 1 = released
-		receptionBuffer.push(~controllerState.val);
-		receptionBuffer.push(~(controllerState.val >> 8));
+		else {
+			// return some default value
+			receptionBuffer.push(0xFF);
+		}
 	}
-	// waits 200 cpu cycles before receiving the byte
-	nextCycleIRQ = (*clockCycle) + 200;
+	// waits 200 cpu cycles before setting an IRQ
+	// it is necessary to wait because this behavior is expected by the BIOS
+	if (receptionBuffer.size() == 1) {
+		// an IRQ is not triggered when the last byte is received
+		joyStat.content.isFifoNotEmpty = true;
+	}
+	else {
+		nextCycleIRQ = (*clockCycle) + 200;
+	}
 }
 
 void Controller::handleInput(ControllerKey key, bool isPressed)
@@ -62,6 +76,8 @@ void Controller::checkIRQ()
 		// we have an IRQ happening
 		// reset the clock
 		nextCycleIRQ = std::numeric_limits<u64>::max();
+		// we have a byte in the FIFO
+		joyStat.content.isFifoNotEmpty = true;
 		if (!joyStat.content.hasIRQ7 && joyControl.content.isACKInterruptEnabled) {
 			// if the previous IRQ was acknowledged and IRQ are enabled
 			joyStat.content.hasIRQ7 = true;
@@ -77,6 +93,8 @@ u8 Controller::readData()
 		// (I think)
 		return 0;
 	}
+	// Suppose there is only one byte at a time in the FIFO
+	joyStat.content.isFifoNotEmpty = false;
 	u8 data = receptionBuffer.front();
 	receptionBuffer.pop();
 	return data;
@@ -94,6 +112,9 @@ void Controller::sendData(u8 data)
 void Controller::init(Emulator* emu)
 {
 	controllerState.content.always1 = 0b11;
+	// transfer is instantaneous on this emulator
+	joyStat.content.isTransferReadyOrStarted = true;
+	joyStat.content.isTransferReadyOrFinished = true;
 	clockCycle = &emu->getCPU()->clockCycle;
 	nextCycleIRQ = std::numeric_limits<u64>::max();
 	interrupt = emu->getInterrupt();

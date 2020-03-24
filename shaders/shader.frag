@@ -38,7 +38,15 @@ void main(){
 		}
 	} else if(renderMode == 1){
 		// 8-bit clut
-		outColor = vec4(fragColor,0.0);
+		uint texel = vecToUint(texture(frameContent, textPos));
+		// get the right clut pos
+		texel = (texel >> ((int(textPos.x * 2) & 1) * 8)) & 0xFF;
+		outColor = texelFetch(frameContent, ivec2(clutLoc.x + texel, clutLoc.y),0);
+		// hopefully this inequality on floating values does not lead to any problem
+		if(outColor == vec4(0.0,0.0,0.0,0.0)){
+			// transparent
+			discard;
+		}
 	} else if(renderMode == 2){
 		// direct 15-bit
 		outColor = texture(frameContent, textPos);

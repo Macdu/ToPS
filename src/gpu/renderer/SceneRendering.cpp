@@ -457,7 +457,7 @@ void SceneRendering::makeRenderCmdBuffer()
 	if (startIndex != verticesToRenderSize) {
 		// draw the last set
 		renderCmd.setScissor(0, currentScissor);
-		renderCmd.draw((u32)(verticesToRenderSize - startIndex), 1, startIndex, 1);
+		renderCmd.draw((u32)(verticesToRenderSize - startIndex), 1, startIndex, 0);
 	}
 
 

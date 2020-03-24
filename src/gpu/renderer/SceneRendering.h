@@ -81,7 +81,7 @@ public:
 
 	void makeRenderCmdBuffer();
 	void copyVertices();
-	void renderVertices();
+	void renderVertices(bool emitFinishedSemaphore);
 
 	// transfer an image from DMA to the framebuffer
 	void transferImage(u16* image, Point<i16> topLeft, Point<i16> extent);

@@ -40,10 +40,10 @@ void SceneRendering::setScissor(const vk::Rect2D& newScissor)
 {
 	if (newScissor != currentScissor) {
 		// update scissor
-		if (verticesRenderScissors.back().first != verticesToRenderSize - 1) {
+		if (verticesRenderScissors.back().first != verticesToRenderSize) {
 			// vertices were drawn using the previous scissor
 			verticesRenderScissors.push_back({
-				verticesToRenderSize - 1,
+				verticesToRenderSize,
 				currentScissor
 				});
 		}
@@ -451,8 +451,8 @@ void SceneRendering::makeRenderCmdBuffer()
 	for (u32 i = 0; i < verticesRenderScissors.size(); i++) {
 		// set the scissor for the specified vertices
 		renderCmd.setScissor(0, verticesRenderScissors[i].second);
-		renderCmd.draw((u32)(verticesRenderScissors[i].first - startIndex + 1), 1, startIndex, 0);
-		startIndex = verticesRenderScissors[i].first + 1;
+		renderCmd.draw(verticesRenderScissors[i].first - startIndex, 1, startIndex, 0);
+		startIndex = verticesRenderScissors[i].first;
 	}
 	if (startIndex != verticesToRenderSize) {
 		// draw the last set
@@ -485,7 +485,7 @@ void SceneRendering::copyVertices() {
 	device.unmapMemory(vertexBufferMemory);
 }
 
-void SceneRendering::renderVertices()
+void SceneRendering::renderVertices(bool emitFinishedSemaphore)
 {
 	device.waitForFences(renderFence, VK_TRUE,
 		std::numeric_limits<uint64_t>::max());
@@ -496,14 +496,14 @@ void SceneRendering::renderVertices()
 	makeRenderCmdBuffer();
 
 	vk::Semaphore renderFinishedSemaphores[]
-		= {verticesRenderedSemaphore, copyToReadImgReady};
+		= { copyToReadImgReady, verticesRenderedSemaphore };
 	vk::SubmitInfo renderSubmitInfo{};
 	renderSubmitInfo
 		// no semaphores to wait for
 		.setWaitSemaphoreCount(0)
 		.setCommandBufferCount(1)
 		.setPCommandBuffers(&renderCmd)
-		.setSignalSemaphoreCount(2)
+		.setSignalSemaphoreCount(emitFinishedSemaphore ? 2 : 1)
 		.setPSignalSemaphores(renderFinishedSemaphores);
 
 	renderer->graphicsQueue.submit(renderSubmitInfo, nullptr);
@@ -525,6 +525,12 @@ void SceneRendering::renderVertices()
 
 void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> extent)
 {
+	// can't see anything else right now than to render what was previously sent
+	// no renderFinished semaphore needs to be emitted in this case
+	renderVertices(false);
+	// and we still need to copy the image from the readImage to the renderImage
+	verticesToRenderSize = 6;
+	verticesRenderScissors.resize(1);
 	assert(topLeft.x >= 0 && topLeft.y >= 0 && extent.x > 0 && extent.y > 0);
 	u32 size = ((u32)extent.x) * extent.y;
 

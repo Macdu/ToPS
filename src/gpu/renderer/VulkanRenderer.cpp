@@ -446,7 +446,7 @@ void VulkanRenderer::drawFrame()
 	graphicsQueue.submit(setTransferInfo, nullptr);
 
 	// render the image
-	sceneRendering.renderVertices();
+	sceneRendering.renderVertices(true);
 
 	// copy it to the swapchain
 	vk::PipelineStageFlags copyWaitStages[] = {

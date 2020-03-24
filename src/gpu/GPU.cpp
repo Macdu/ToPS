@@ -94,7 +94,7 @@ void GPU::init(vk::Instance instance, vk::SurfaceKHR surface)
 	};
 	renderer.sceneRendering.verticesRenderScissors.resize(1);
 	renderer.sceneRendering.verticesRenderScissors[0] =
-		{ 5, {{0,0}, {1024,512}} };
+		{ 6, {{0,0}, {1024,512}} };
 
 	reset();
 }
@@ -208,6 +208,7 @@ void GPU::pushCmdGP0(u32 val)
 
 void GPU::gp0(u32 cmd, u32 opcode)
 {
+	//printf("GPU cmd %02x \n", opcode);
 	switch (opcode) {
 	case 0x00:
 		// NOP

@@ -103,6 +103,11 @@ void Emulator::renderFrame()
 	for (int scanline = 0; scanline < GPU::totalNTSCScanlines; scanline++) {
 		gpu.setScanline(scanline);
 
+		// check for interrupts every 100 cycles
+		controller.checkIRQ();
+		interrupt.checkIRQ();
+
+
 		if (scanline == GPU::scanlineVBlankStart) {
 			gpu.drawFrame();
 		}
@@ -113,9 +118,6 @@ void Emulator::renderFrame()
 			for (; cpuCycle < std::max(GPU::cyclesPerScanline / 3,prevCycle + 100); cpuCycle++) {
 				cpu.step();
 			}
-			// check for interrupts every 100 cycle
-			controller.checkIRQ();
-			interrupt.checkIRQ();
 		}
 	}
 	

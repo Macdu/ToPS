@@ -42,6 +42,9 @@ public:
     void setInterruptMask(u16 val);
     // when a software or hardware interrupt is requested
     void requestInterrupt(InterruptType interrupt);
+    // after all hardware IRQ have been checked, call this function
+    // to notify the CPU if needed
+    void checkIRQ();
     void init(CPU* cpu);
 
 private:

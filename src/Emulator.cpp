@@ -115,6 +115,7 @@ void Emulator::renderFrame()
 			}
 			// check for interrupts every 100 cycle
 			controller.checkIRQ();
+			interrupt.checkIRQ();
 		}
 	}
 	

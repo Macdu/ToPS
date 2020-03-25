@@ -24,13 +24,18 @@ void Interrupt::setInterruptMask(u16 val)
 
 void Interrupt::requestInterrupt(InterruptType interrupt)
 {
-	u32 interruptBit = 1 << (int)interrupt;
-	// if this interrupt type is enabled, and one is not already activated
-	if ((interruptMask & (~interruptStatus) & interruptBit) != 0) {
-		interruptStatus |= interruptBit;
-		// set cop0 cause registers to say an interrupt is enabled (bit 10)
-		constexpr u32 hardwareInterruptBit = 1 << 10;
-		*cpu->getState()->cause |= hardwareInterruptBit;
+	u32 interruptBit = 1 << (u32)interrupt;
+	interruptStatus |= interruptBit;
+	// update cause register if needed
+	if ((interruptMask & interruptStatus) != 0) {
+		*cpu->getState()->cause |= 1 << 10;
+	}
+}
+
+void Interrupt::checkIRQ()
+{
+	// if a software interrupt has not been acknowledged
+	if ((interruptMask & interruptStatus) != 0) {
 		constexpr u32 canInterruptBit = (1 << 10) + 1;
 		// check if hardware interrupt are enabled and interrupts are enabled
 		if ((*cpu->getState()->sr & canInterruptBit) == canInterruptBit) {

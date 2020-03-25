@@ -32,9 +32,13 @@ u32 Memory::read32(u32 addr) const
 		// Scratchpad
 		return ram->load32Scratchpad(addr - 0x1F800000);
 	}
-	else if (addr >= 0x1F801070 && addr < 0x1F801078) {
-		// Interrupt status/mask register
-		return 0;
+	else if (addr == 0x1F801070) {
+		// I_STAT
+		return (u32)interrupt->interruptStatus;
+	}
+	else if (addr == 0x1F801074) {
+		// I_MASK
+		return (u32)interrupt->interruptMask;
 	}
 	else if (addr >= 0x1F801080 && addr < 0x1F801100) {
 		// DMA
@@ -172,8 +176,13 @@ void Memory::write32(u32 addr, u32 value)
 	else if (addr == 0xFFFE0130) {
 		// Cache control
 	}
-	else if (addr == 0x1F801070 || addr == 0x1F801074) {
-		// IRQ registers
+	else if (addr == 0x1F801070) {
+		// I_STAT
+		interrupt->setInterruptStatus((u16)value);
+	} 
+	else if (addr == 0x1F801074) {
+		// I_MASK
+		interrupt->setInterruptMask((u16)value);
 	}
 	else if (addr >= 0x1F801080 && addr < 0x1F801100) {
 		// DMA

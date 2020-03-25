@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "../Emulator.h"
+
 u16 gp0_opcodes_length[256];
 
 void GPU::initGP0Opcodes()
@@ -122,6 +124,11 @@ void GPU::setScanline(int scanline)
 	assert(scanline >= 0 && scanline < totalNTSCScanlines);
 	if (scanline >= scanlineVBlankStart) {
 		gpuProps.drawingOdd = false;
+		if (scanline == scanlineVBlankStart) {
+			// avocado and psxact starts the vblank IRQ at the end of the VBlank
+			// but I believe it should start at the beginning of the VBlank, right ?
+			emu->getInterrupt()->requestInterrupt(InterruptType::iVBlank);
+		}
 	}
 	else {
 		// depends if we are in interlaced mode or not

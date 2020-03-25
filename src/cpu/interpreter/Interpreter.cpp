@@ -663,8 +663,15 @@ void Interpreter::interpret()
 void Interpreter::exception(ExceptionCause cause, u32 info)
 {
 	*state->epc = currPC;
+	if (cause == ExceptionCause::INTERRUPT) {
+		// interrupts come from outside the cpu, so the opcode at currPC has already been 
+		// executed successfully
+		*state->epc += 4;
+	}
 
-	*state->cause = static_cast<u32>(cause) << 2;
+	// remove everything except interrupt bits
+	*state->cause &= 0xFF << 8;
+	*state->cause |= static_cast<u32>(cause) << 2;
 
 	// If in branch delay
 	if (state->pc + 4 != state->nextpc) {

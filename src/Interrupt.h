@@ -4,7 +4,7 @@
 
 class CPU;
 
-enum InterruptType {
+enum struct InterruptType : u8 {
     iVBlank = 0,
     iGPU = 1,
     iCDROM = 2,

@@ -28,6 +28,7 @@ SET(SOURCES
 	src/Interrupt.cpp
 	src/Memory.cpp
 	src/RAM.cpp
+	src/Timers.cpp
 	main.cpp
 )
 
@@ -52,6 +53,7 @@ SET(HEADERS
 	src/Interrupt.h
 	src/Memory.cpp
 	src/RAM.h
+	src/Timers.h
 )
 
 add_executable(ToPS ${SOURCES} ${HEADERS})

@@ -6,6 +6,7 @@
 #include "DMA.h"
 #include "gpu/GPU.h"
 #include "Controller.h"
+#include "Timers.h"
 #include "Interrupt.h"
 
 class RenderWindow;
@@ -39,6 +40,7 @@ public:
 	DMA* getDMA() { return &dma; };
 	GPU* getGPU() { return &gpu; };
 	Controller* getController() { return &controller; };
+	Timers* getTimers() { return &timers; };
 	Interrupt* getInterrupt() { return &interrupt; };
 
 private:
@@ -49,5 +51,6 @@ private:
 	DMA dma;
 	GPU gpu;
 	Controller controller;
+	Timers timers;
 	RenderWindow* renderSurface;
 };

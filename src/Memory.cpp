@@ -7,6 +7,7 @@ void Memory::init(Emulator * emu)
 	interrupt = emu->getInterrupt();
 	bios = emu->getBios();
 	ram = emu->getRam();
+	timers = emu->getTimers();
 	state = emu->getCPU()->getState();
 	dma = emu->getDMA();
 	gpu = emu->getGPU();
@@ -68,6 +69,10 @@ u32 Memory::read32(u32 addr) const
 			}
 		}
 	}
+	else if (addr >= 0x1F801100 && addr <= 0x1F801138) {
+		// Timer
+		return (u32)timers->getReg(addr - 0x1F801100);
+	}
 	else if (addr >= 0x1F801810 && addr < 0x1F801820) {
 		// GPU
 		//printf("GPU read 0x%08x\n", addr);
@@ -80,10 +85,6 @@ u32 Memory::read32(u32 addr) const
 			return gpu->getGPUStat();
 		}
 		return ~0;
-	}
-	else if (addr >= 0x1f801100 && addr < 0x1f8011C0) {
-		// Timers
-		return 0;
 	}
 	else {
 		throw_error("Failed to read address");
@@ -120,6 +121,10 @@ u16 Memory::read16(u32 addr) const
 	else if (addr == 0x1F801074) {
 		// I_MASK
 		return interrupt->interruptMask;
+	}
+	else if (addr >= 0x1F801100 && addr <= 0x1F801138) {
+		// Timer
+		return timers->getReg(addr - 0x1F801100);
 	}
 	throw_error("Failed to read address");
 }
@@ -214,6 +219,10 @@ void Memory::write32(u32 addr, u32 value)
 			}
 		}
 	}
+	else if (addr >= 0x1F801100 && addr <= 0x1F801138) {
+		// Timer
+		timers->setReg(addr - 0x1F801100, (u32)value);
+	}
 	else if (addr == 0x1F801810) {
 		// GP0 command
 		gpu->pushCmdGP0(value);
@@ -221,9 +230,6 @@ void Memory::write32(u32 addr, u32 value)
 	else if (addr == 0x1F801814) {
 		// GP1 command
 		gpu->gp1(value);
-	}
-	else if (addr >= 0x1f801100 && addr < 0x1f8011C0) {
-		// Timers
 	}
 	else {
 		throw_error("Failed to write address");
@@ -270,11 +276,12 @@ void Memory::write16(u32 addr, u16 value)
 		// I_MASK
 		interrupt->setInterruptMask(value);
 	}
+	else if (addr >= 0x1F801100 && addr <= 0x1F801138) {
+		// Timer
+		timers->setReg(addr - 0x1F801100, value);
+	}
 	else if (addr >= 0x1F801D80 && addr < 0x1F802000) {
 		// SPU
-	}
-	else if (addr >= 0x1f801100 && addr < 0x1f8011C0) {
-		// Timers
 	}
 	else if (addr >= 0x1f801c00 && addr < 0x1F801D80) {
 		// SPU

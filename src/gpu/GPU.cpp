@@ -139,6 +139,27 @@ void GPU::setScanline(int scanline)
 	}
 }
 
+u32 GPU::getHorizontalRes()
+{
+	if (gpuProps.horizontalRes2 == 1) {
+		return 368;
+	}
+	else {
+		switch (gpuProps.horizontalRes1)
+		{
+		case 0:
+			return 256;
+		case 1:
+			return 320;
+		case 2:
+			return 512;
+		default:
+			// case 3
+			return 640;
+		}
+	}
+}
+
 inline void GPU::pushVertexColor(const Point<i16>& point,const Color & color)
 {
 	renderer.sceneRendering

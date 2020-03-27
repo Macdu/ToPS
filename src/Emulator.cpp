@@ -14,6 +14,7 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	gpu.emu = this;
 	interrupt.init(&cpu);
 	gpu.init(instance, surface);
+	timers.init(&interrupt, &gpu);
 	importBIOS();
 
 	reset();
@@ -100,24 +101,30 @@ void Emulator::destroy()
 
 void Emulator::renderFrame()
 {
+	timers.newFrame();
 	for (int scanline = 0; scanline < GPU::totalNTSCScanlines; scanline++) {
+		timers.newScanline();
 		gpu.setScanline(scanline);
-
-		// check for interrupts every 100 cycles
-		controller.checkIRQ();
+		// check for VBlank IRQ
 		interrupt.checkIRQ();
 
 
 		if (scanline == GPU::scanlineVBlankStart) {
 			gpu.drawFrame();
+			timers.vBlankReached();
 		}
 
-		// a cpu cycle happens every 3 PS1 clock cycle
-		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline / 3; cpuCycle++) {
+		// the ratio between CPU cyles and GPU cyles is 11/7
+		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline * 7 / 11; cpuCycle++) {
 			int prevCycle = cpuCycle;
-			for (; cpuCycle < std::max(GPU::cyclesPerScanline / 3,prevCycle + 100); cpuCycle++) {
+			for (; cpuCycle < std::max(GPU::cyclesPerScanline / 3,prevCycle + 70); cpuCycle++) {
 				cpu.step();
 			}
+			// check for interrupts and update timers
+			// every 70 CPU cycles = 110 GPU cycle
+			timers.step(cpuCycle - prevCycle, cpuCycle);
+			controller.checkIRQ();
+			interrupt.checkIRQ();
 		}
 	}
 	

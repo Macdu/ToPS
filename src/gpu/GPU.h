@@ -30,6 +30,8 @@ public:
 	u32 getGPURead();
 	// set the current scanline being 
 	void setScanline(int scanline);
+	// return the horizontal res (used by timers)
+	u32 getHorizontalRes();
 
 	inline void pushVertexColor(const Point<i16>& point,const Color& color);
 	inline void pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc,

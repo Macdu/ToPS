@@ -3,6 +3,7 @@
 #include "definitions.h"
 
 class Interrupt;
+class Timers;
 class Bios;
 class Emulator;
 class RAM;
@@ -31,4 +32,5 @@ private:
 	CPUState* state;
 	GPU* gpu;
 	Controller* controller;
+	Timers* timers;
 };

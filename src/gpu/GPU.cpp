@@ -484,9 +484,9 @@ void GPU::textured4Points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexTexture(vertices[i], textLocs[i], clutID, textPage);
 	}
-	printf("Draw textured quad : (%d,%d) (%d,%d) -> (%d,%d) (%d,%d)\n",
-		textLocs[0].x, textLocs[0].y, textLocs[3].x, textLocs[3].y,
-		vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
+	//printf("Draw textured quad : (%d,%d) (%d,%d) -> (%d,%d) (%d,%d)\n",
+	//	textLocs[0].x, textLocs[0].y, textLocs[3].x, textLocs[3].y,
+	//	vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
 }
 
 void GPU::monochrome4Points()
@@ -504,7 +504,7 @@ void GPU::monochrome4Points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexColor(vertices[i], color);
 	}
-	printf("Draw monochrome 4-points\n");
+	//printf("Draw monochrome 4-points\n");
 }
 
 void GPU::shaded4points()
@@ -527,7 +527,7 @@ void GPU::shaded4points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexColor(vertices[i], colors[i]);
 	}
-	printf("Draw shaded 4-points\n");
+	//printf("Draw shaded 4-points\n");
 }
 
 void GPU::shadedTriangle()
@@ -545,7 +545,7 @@ void GPU::shadedTriangle()
 	for (int i = 0; i < 3; i++) {
 		pushVertexColor(vertices[i], colors[i]);
 	}
-	printf("Draw shaded triangle\n");
+	//printf("Draw shaded triangle\n");
 }
 
 void GPU::rectangle()
@@ -608,8 +608,8 @@ void GPU::sendRectToFrameBuffer()
 	readColor();
 	imageTopLeft = readPoint();
 	imageExtent = readPoint();
-	printf("Send image to framebuffer (%d,%d) [%d,%d]\n",
-		imageTopLeft.x, imageTopLeft.y, imageExtent.x, imageExtent.y);
+	//printf("Send image to framebuffer (%d,%d) [%d,%d]\n",
+	//	imageTopLeft.x, imageTopLeft.y, imageExtent.x, imageExtent.y);
 	u32 size = ((u32)imageExtent.x) * imageExtent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
@@ -627,7 +627,7 @@ void GPU::sendFrameBufferToCPU()
 	u32 size = ((u32)imageExtent.x) * imageExtent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
-	printf("Framebuffer sent to CPU\n");
+	//printf("Framebuffer sent to CPU\n");
 	gpuReadDataCurr = 0;
 	gpuReadDataSize = size >> 1;
 	renderer.sceneRendering.readFramebuffer(gpuReadData, topLeft, extent);

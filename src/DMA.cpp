@@ -87,7 +87,7 @@ inline u32 DMA::getDMASize(int channel)
 
 void DMA::makeDMA(int channel)
 {
-	printf("DMA happening, channel %d\n", channel);
+	//printf("DMA happening, channel %d\n", channel);
 	switch (channelControlRegisters[channel].syncMode) {
 		case LINKED_LIST:
 			dmaLinkedList(channel);

@@ -122,9 +122,9 @@ u32 GPU::getGPURead()
 void GPU::setScanline(int scanline)
 {
 	assert(scanline >= 0 && scanline < totalNTSCScanlines);
-	if (scanline >= scanlineVBlankStart) {
+	if (scanline >= scanlineVBlankStart - 1) {
 		gpuProps.drawingOdd = false;
-		if (scanline == scanlineVBlankStart) {
+		if (scanline == scanlineVBlankStart - 1) {
 			// avocado and psxact starts the vblank IRQ at the end of the VBlank
 			// but I believe it should start at the beginning of the VBlank, right ?
 			emu->getInterrupt()->requestInterrupt(InterruptType::iVBlank);
@@ -135,7 +135,9 @@ void GPU::setScanline(int scanline)
 		if (gpuProps.hasVerticalInterlace) {
 			gpuProps.drawingOdd = (bool)(scanline % 2);
 		}
-		// otherwise it changes at the next frame
+		else {
+			gpuProps.drawingOdd = (bool)(totalFrames % 2);
+		}
 	}
 }
 
@@ -192,11 +194,6 @@ void GPU::drawFrame() {
 	renderer.sceneRendering.verticesToRenderSize = 6;
 	renderer.sceneRendering.verticesRenderScissors.resize(1);
 	totalFrames++;
-
-	// set the drawOdd bit if needed
-	if (!gpuProps.hasVerticalInterlace) {
-		gpuProps.drawingOdd = (bool)(totalFrames % 2);
-	}
 }
 
 void GPU::pushCmdGP0(u32 val)

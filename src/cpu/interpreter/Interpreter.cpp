@@ -58,6 +58,9 @@ void Interpreter::interpret()
 	if (currPC == 0x00004070) {
 		ps1_putchar(static_cast<char>(reg[4] & 0xFF));
 	}
+	else if (reg[9] == 0x40 && currPC == 0xA0) {
+		throw_error("PSX SystemErrorUnresolvedException!");
+	}
 
 	state->pc = state->nextpc;
 	state->nextpc += 4;

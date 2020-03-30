@@ -7,8 +7,11 @@
 class Disassembler {
 public:
 
-	// print the disassembled instruction
+	// returns the disassembled instruction
 	std::string disassemble(u32 instruction);
+
+	// returns the disassembled BIOS call
+	std::string biosCall(u32 addr, u32* reg);
 
 private:
 	inline u32 opcode(u32 instr) {

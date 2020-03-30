@@ -45,8 +45,12 @@ void Interpreter::interpret()
 	if (currPC == 0x00004070) {
 		ps1_putchar(static_cast<char>(reg[4] & 0xFF));
 	}
-	else if (reg[9] == 0x40 && currPC == 0xA0) {
-		throw_error("PSX SystemErrorUnresolvedException!");
+	else if (currPC == 0xA0 || currPC == 0xB0 || currPC == 0xC0) {
+		if (Debugging::bios) {
+			std::string bios = disassembler.biosCall(currPC, reg);
+			if (bios.size() != 0)
+				printf("BIOS : %s\n", bios.c_str());
+		}
 	}
 
 	state->pc = state->nextpc;

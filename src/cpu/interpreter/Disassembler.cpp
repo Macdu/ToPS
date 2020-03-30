@@ -378,3 +378,162 @@ std::string Disassembler::disassemble(u32 instr)
 
 	return std::string(res);
 }
+
+std::string Disassembler::biosCall(u32 addr, u32* reg)
+{
+	char res[200];
+	res[0] = 0;
+	if (addr == 0xA0) {
+		switch (reg[9]) {
+		case 0x13:
+			sprintf(res, "SaveState(0x%08x)", reg[4]);
+			break;
+		case 0x17:
+			sprintf(res, "strcmp(0x%08x,0x%08x)", reg[4], reg[5] );
+			break;
+		case 0x1B:
+			sprintf(res, "strlen(0x%08x)", reg[4]);
+			break;
+		case 0x25:
+			sprintf(res, "toupper(%c)", (char)reg[4]);
+			break;
+		case 0x28:
+			sprintf(res, "bzero(0x%08x,0x%x)", reg[4], reg[5]);
+			break;
+		case 0x2A:
+			sprintf(res, "memcpy(0x%08x,0x%08x,0x%x)", reg[4], reg[5], reg[6]);
+			break;
+		case 0x33:
+			sprintf(res, "malloc(0x%x)", reg[4]);
+			break;
+		case 0x39:
+			sprintf(res, "InitHeap(0x%08x,0x%x)", reg[4], reg[5]);
+			break;
+		case 0x40:
+			sprintf(res, "SystemErrorUnresolvedException()");
+			throw_error("SystemErrorUnresolvedException");
+			break;
+		case 0x3F:
+			//sprintf(res, "Printf()");
+			break;
+		case 0x44:
+			sprintf(res, "FlushCache()");
+			break;
+		case 0x49:
+			sprintf(res, "GPU_cw(0x%08x)", reg[4]);
+			break;
+		case 0x72:
+			sprintf(res, "CdRemove()");
+			break;
+		case 0x96:
+			sprintf(res, "AddCDROMDevice()");
+			break;
+		case 0x97:
+			sprintf(res, "AddMemCardDevice()");
+			break;
+		case 0x99:
+			sprintf(res, "AddDummyTtyDevice()");
+			break;
+		case 0xA3:
+			sprintf(res, "DequeueCdIntr()");
+			break;
+		default:
+			printf("BIOS call : 0x%02x\n", reg[9]);
+			throw_error("Undefined A0 bios call!");
+		}
+	}
+	else if (addr == 0xB0) {
+		switch (reg[9]) {
+		case 0x00:
+			sprintf(res, "alloc_kernel_memory(0x%x)", reg[4]);
+			break;
+		case 0x07:
+			sprintf(res, "DeliverEvent(0x%08x, 0x%x)", reg[4], reg[5]);
+			break;
+		case 0x08:
+			sprintf(res, "OpenEvent(0x%08x,0x%x,0x%x,0x%x)", reg[4], reg[5], reg[6], reg[7]);
+			break;
+		case 0x09:
+			sprintf(res, "CloseEvent(0x%08x)", reg[4]);
+			break;
+		case 0x0B:
+			sprintf(res, "TestEvent(0x%08x)", reg[4]);
+			break;
+		case 0x0C:
+			sprintf(res, "EnableEvent(0x%08x)", reg[4]);
+			break;
+		case 0x12:
+			sprintf(res, "InitPad(0x%08x,0x%x,0x%08x,0x%x)", reg[4], reg[5], reg[6], reg[7]);
+			break;
+		case 0x13:
+			sprintf(res, "StartPad()");
+			break;
+		case 0x17:
+			sprintf(res, "ReturnFromException()");
+			break;
+		case 0x18:
+			sprintf(res, "SetDefaultExitFromException()");
+			break;
+		case 0x19:
+			sprintf(res, "SetCustomExitFromException(0x%08x)", reg[4]);
+			break;
+		case 0x3D:
+			//sprintf(res, "std_out_putchar(%c)", (u8)reg[4]);
+			break;
+		case 0x47:
+			sprintf(res, "AddDevice(0x%08x)", reg[4]);
+			break;
+		case 0x5B:
+			sprintf(res, "ChangeClearPad(%d)", reg[4]);
+			break;
+		default:
+			printf("BIOS call : 0x%02x\n", reg[9]);
+			throw_error("Undefined B0 bios call!");
+		}
+	}
+	else if (addr == 0xC0) {
+		switch (reg[9]) {
+		case 0x00:
+			sprintf(res, "EnqueueTimerAndVblankIrqs(%d)", reg[4]);
+			break;
+		case 0x01:
+			sprintf(res, "EnqueueSyscallHandler(%d)", reg[4]);
+			break;
+		case 0x02:
+			sprintf(res, "SysEnqIntRP(%d,0x%08x)", reg[4], reg[5]);
+			break;
+		case 0x03:
+			sprintf(res, "SysDeqIntRP(%d,0x%08x)", reg[4], reg[5]);
+			break;
+		case 0x07:
+			sprintf(res, "InstallExceptionHandlers()");
+			break;
+		case 0x08:
+			sprintf(res, "SysInitMemory(0x%08x,0x%08x)", reg[4], reg[5]);
+			break;
+		case 0x0A:
+			sprintf(res, "ChangeClearRCnt(%d,%d)", reg[4], reg[5]);
+			break;
+		case 0x0C:
+			sprintf(res, "InitDefInt(%d)", reg[4]);
+			break;
+		case 0x12:
+			sprintf(res, "InstallDevices(0x%08x)", reg[4]);
+			break;
+		case 0x13:
+			sprintf(res, "FlushStdInOutPut()");
+			break;
+		case 0x1C:
+			sprintf(res, "AdjustA0Table()");
+			break;
+		default:
+			printf("BIOS call : 0x%02x\n", reg[9]);
+			throw_error("Undefined C0 bios call!");
+		}
+	}
+	else {
+		printf("BIOS call : 0x%08x -> 0x%02x\n",addr, reg[9]);
+		throw_error("Undefined bios call!");
+	}
+	return res;
+}

@@ -4,16 +4,6 @@
 
 #include "../../Emulator.h"
 
-bool is_debugging = false;
-
-void setDebugging(bool state) {
-	is_debugging = state;
-}
-
-bool isDebugging() {
-	return is_debugging;
-}
-
 void Interpreter::ps1_putchar(char val)
 {
 	buffer[bufferSize++] = val;
@@ -47,11 +37,8 @@ void Interpreter::interpret()
 	//if (state->pc == 0x800513c4)is_debugging = true;
 	assert(reg[0] == 0);
 	currPC = state->pc;
-	//if (currPC == 0x80026804) {
-	//	printf("Oktt!\n");
-	//}
 	u32 instr = memory->read32(currPC);
-	if(is_debugging)printf("PC : 0x%08x : %s\n",state->pc, disassembler.disassemble(instr).c_str());
+	if(Debugging::interpreter)printf("PC : 0x%08x : %s\n",state->pc, disassembler.disassemble(instr).c_str());
 
 	// hack used in order to show printf
 	// intercepts std_out_putchar bios calls

@@ -11,6 +11,8 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(glm)
 
 SET(SOURCES 
+	src/cdplayer/CDCommand.cpp
+	src/cdplayer/CDPlayer.cpp
 	src/cpu/gte/GTE.cpp
 	src/cpu/interpreter/Disassembler.cpp
 	src/cpu/interpreter/Interpreter.cpp
@@ -23,6 +25,7 @@ SET(SOURCES
 	src/qt/RenderWindow.cpp
 	src/Bios.cpp
 	src/Controller.cpp
+	src/definitions.cpp
 	src/DMA.cpp
 	src/Emulator.cpp
 	src/Interrupt.cpp
@@ -33,6 +36,7 @@ SET(SOURCES
 )
 
 SET(HEADERS 
+	src/cdplayer/CDPlayer.h
 	src/cpu/gte/GTE.h
 	src/cpu/CPU.h
 	src/cpu/CPUState.h

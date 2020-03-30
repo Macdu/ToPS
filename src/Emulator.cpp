@@ -15,6 +15,7 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	interrupt.init(&cpu);
 	gpu.init(instance, surface);
 	timers.init(&interrupt, &gpu);
+	cdPlayer.init(&interrupt);
 	importBIOS();
 
 	reset();
@@ -26,8 +27,8 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	}
 	printf("Bios startup done!\n");
 
-	importEXE();
-	//setDebugging(true);
+	//importEXE();
+	//Debugging::interpreter = true;
 }
 
 void Emulator::importBIOS()
@@ -124,6 +125,7 @@ void Emulator::renderFrame()
 			// every 70 CPU cycles = 110 GPU cycle
 			timers.step(cpuCycle - prevCycle, cpuCycle);
 			controller.checkIRQ();
+			cdPlayer.checkIRQ();
 			interrupt.checkIRQ();
 		}
 	}

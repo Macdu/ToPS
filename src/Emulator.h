@@ -8,6 +8,7 @@
 #include "Controller.h"
 #include "Timers.h"
 #include "Interrupt.h"
+#include "cdplayer/CDPlayer.h"
 
 class RenderWindow;
 
@@ -40,6 +41,7 @@ public:
 	DMA* getDMA() { return &dma; };
 	GPU* getGPU() { return &gpu; };
 	Controller* getController() { return &controller; };
+	CDPlayer* getCDPlayer() { return &cdPlayer; };
 	Timers* getTimers() { return &timers; };
 	Interrupt* getInterrupt() { return &interrupt; };
 
@@ -51,6 +53,7 @@ private:
 	DMA dma;
 	GPU gpu;
 	Controller controller;
+	CDPlayer cdPlayer;
 	Timers timers;
 	RenderWindow* renderSurface;
 };

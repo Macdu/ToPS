@@ -10,6 +10,7 @@ class RAM;
 class DMA;
 class GPU;
 class Controller;
+class CDPlayer;
 struct CPUState;
 
 class Memory {
@@ -32,5 +33,6 @@ private:
 	CPUState* state;
 	GPU* gpu;
 	Controller* controller;
+	CDPlayer* cdPlayer;
 	Timers* timers;
 };

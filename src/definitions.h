@@ -23,6 +23,12 @@ typedef int8_t i8;
 // useless bits in registers
 typedef bool emptyBit;
 
+struct Debugging {
+	static bool interpreter;
+	static bool bios;
+	static bool cd;
+};
+
 template <class T>
 struct Point{
 	T x;

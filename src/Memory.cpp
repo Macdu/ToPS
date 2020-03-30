@@ -13,6 +13,7 @@ void Memory::init(Emulator * emu)
 	gpu = emu->getGPU();
 	controller = emu->getController();
 	controller->init(emu);
+	cdPlayer = emu->getCDPlayer();
 }
 
 
@@ -152,6 +153,19 @@ u8 Memory::read8(u32 addr) const
 		// JOY_RX_DATA
 		return controller->readData();
 	}
+	else if (addr == 0x1F801800) {
+		return cdPlayer->getCDReg0();
+	}
+	else if (addr == 0x1F801801) {
+		return cdPlayer->getCDReg1();
+	}
+	else if (addr == 0x1F801802) {
+		return cdPlayer->getCDReg2();
+	}
+	else if (addr == 0x1F801803) {
+		return cdPlayer->getCDReg3();
+	}
+	printf("Attempt to read8 0x%08x\n", addr);
 	throw_error("Fail to read address");
 }
 
@@ -318,7 +332,20 @@ void Memory::write8(u32 addr, u8 value)
 		// JOY_TX_DATA
 		controller->sendData(value);
 	}
+	else if (addr == 0x1F801800) {
+		cdPlayer->setCDReg0(value);
+	}
+	else if (addr == 0x1F801801) {
+		cdPlayer->setCDReg1(value);
+	}
+	else if (addr == 0x1F801802) {
+		cdPlayer->setCDReg2(value);
+	}
+	else if (addr == 0x1F801803) {
+		cdPlayer->setCDReg3(value);
+	}
 	else {
+		printf("Attempt to write8 0x%08x : 0x%02x\n", addr, value);
 		throw_error("Failed to write address");
 	}
 }

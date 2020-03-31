@@ -657,22 +657,26 @@ void Interpreter::interpret()
 void Interpreter::exception(ExceptionCause cause, u32 info)
 {
 	*state->epc = currPC;
-	if (cause == ExceptionCause::INTERRUPT) {
-		// interrupts come from outside the cpu, so the opcode at currPC has already been 
-		// executed successfully
-		*state->epc += 4;
-	}
 
 	// remove everything except interrupt bits
 	*state->cause &= 0xFF << 8;
 	*state->cause |= static_cast<u32>(cause) << 2;
 
-	// If in branch delay
-	if (state->pc + 4 != state->nextpc) {
+	if (cause == ExceptionCause::INTERRUPT) {
+		// the opcode at currPC has already been executed
+		*state->epc = state->pc;
+
+		// special case branch delay
+		if (state->pc + 4 != state->nextpc) {
+			*state->epc -= 4;
+			*state->cause |= 1 << 31;
+		}
+	}
+	else if (currPC + 4 != state->pc) {
+		// If in branch delay
 		*state->epc -= 4;
 		*state->cause |= 1 << 31;
 	}
-
 	// BEV bit
 	if ((*state->sr & (1 << 22)) != 0) {
 		state->pc = 0xbfc00180;

@@ -487,6 +487,9 @@ void SceneRendering::copyVertices() {
 
 void SceneRendering::renderVertices(bool emitFinishedSemaphore)
 {
+	// skip if there is nothing new to draw
+	if (!emitFinishedSemaphore && verticesToRenderSize == 6)return;
+
 	device.waitForFences(renderFence, VK_TRUE,
 		std::numeric_limits<uint64_t>::max());
 	device.resetFences(renderFence);
@@ -594,6 +597,12 @@ void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> ex
 
 void SceneRendering::readFramebuffer(u32* output, Point<i16> topLeft, Point<i16> extent)
 {
+	// can't see anything else right now than to render what was previously sent
+	// no renderFinished semaphore needs to be emitted in this case
+	renderVertices(false);
+	verticesToRenderSize = 6;
+	verticesRenderScissors.resize(1);
+
 	assert(topLeft.x >= 0 && topLeft.y >= 0 && extent.x > 0 && extent.y > 0);
 	u32 size = ((u32)extent.x) * extent.y;
 	size = (size + 1) & ~1;

@@ -190,7 +190,7 @@ inline void GPU::pushVertexTexture(const Point<i16>& point, const Point<u8>& tex
 }
 
 void GPU::drawFrame() {
-	//printf("Drawing frame.\n");
+	if(Debugging::gpu)printf("Drawing frame.\n");
 	renderer.drawFrame();
 	// keep only the read to render screen rendering
 	renderer.sceneRendering.verticesToRenderSize = 6;
@@ -498,9 +498,9 @@ void GPU::textured4Points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexTexture(vertices[i], textLocs[i], clutID, textPage);
 	}
-	//printf("Draw textured quad : (%d,%d) (%d,%d) -> (%d,%d) (%d,%d)\n",
-	//	textLocs[0].x, textLocs[0].y, textLocs[3].x, textLocs[3].y,
-	//	vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
+	if(Debugging::gpu)printf("GPU : Draw textured quad : (%d,%d) (%d,%d) -> (%d,%d) (%d,%d)\n",
+		textLocs[0].x, textLocs[0].y, textLocs[3].x, textLocs[3].y,
+		vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
 }
 
 void GPU::monochrome4Points()
@@ -518,7 +518,8 @@ void GPU::monochrome4Points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexColor(vertices[i], color);
 	}
-	//printf("Draw monochrome 4-points\n");
+	if(Debugging::gpu)printf("GPU : Draw monochrome 4-points : (%d,%d) (%d,%d)\n",
+		vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
 }
 
 void GPU::shaded4points()
@@ -541,7 +542,8 @@ void GPU::shaded4points()
 	for (int i = 1; i < 4; i++) {
 		pushVertexColor(vertices[i], colors[i]);
 	}
-	//printf("Draw shaded 4-points\n");
+	if (Debugging::gpu)printf("GPU : Draw shaded 4-points : (%d,%d) (%d,%d)\n",
+		vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
 }
 
 void GPU::shadedTriangle()
@@ -559,7 +561,7 @@ void GPU::shadedTriangle()
 	for (int i = 0; i < 3; i++) {
 		pushVertexColor(vertices[i], colors[i]);
 	}
-	//printf("Draw shaded triangle\n");
+	if (Debugging::gpu)printf("GPU : Draw shaded triangle (%d,%d)\n", vertices[0].x, vertices[0].y);
 }
 
 void GPU::rectangle()
@@ -576,6 +578,8 @@ void GPU::rectangle()
 	for (int i = 1; i < 4; i++) {
 		pushVertexColor(points[i], color);
 	}
+	if (Debugging::gpu)printf("GPU : Draw rectangle (%d,%d) [%d,%d]\n",
+		topLeft.x, topLeft.y, size.x, size.y);
 }
 
 void GPU::dot()
@@ -615,6 +619,8 @@ void GPU::sprite()
 	for (int i = 1; i < 4; i++) {
 		pushVertexTexture(vertices[i], textLocs[i], clutID, gpuProps.texturePageDefault);
 	}
+	if (Debugging::gpu)printf("GPU : Draw sprite : (%d,%d) [%d,%d]\n",
+		topLeft.x, topLeft.y, size.x, size.y);
 }
 
 void GPU::sendRectToFrameBuffer()
@@ -622,8 +628,8 @@ void GPU::sendRectToFrameBuffer()
 	readColor();
 	imageTopLeft = readPoint();
 	imageExtent = readPoint();
-	//printf("Send image to framebuffer (%d,%d) [%d,%d]\n",
-	//	imageTopLeft.x, imageTopLeft.y, imageExtent.x, imageExtent.y);
+	if(Debugging::gpu)printf("GPU : Send image to framebuffer (%d,%d) [%d,%d]\n",
+		imageTopLeft.x, imageTopLeft.y, imageExtent.x, imageExtent.y);
 	u32 size = ((u32)imageExtent.x) * imageExtent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
@@ -638,10 +644,11 @@ void GPU::sendFrameBufferToCPU()
 	readColor();
 	auto topLeft = readPoint();
 	auto extent = readPoint();
-	u32 size = ((u32)imageExtent.x) * imageExtent.y;
+	u32 size = ((u32)extent.x) * extent.y;
 	// make sure the number of pixels sent is even
 	size = (size + 1) & ~1;
-	//printf("Framebuffer sent to CPU\n");
+	if(Debugging::gpu)printf("GPU : Framebuffer sent to CPU (%d,%d) [%d,%d]\n",
+		topLeft.x, topLeft.y, extent.x, extent.y);
 	gpuReadDataCurr = 0;
 	gpuReadDataSize = size >> 1;
 	renderer.sceneRendering.readFramebuffer(gpuReadData, topLeft, extent);

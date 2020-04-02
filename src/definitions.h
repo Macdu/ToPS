@@ -28,6 +28,7 @@ struct Debugging {
 	static bool bios;
 	static bool cd;
 	static bool interrupt;
+	static bool gpu;
 };
 
 template <class T>

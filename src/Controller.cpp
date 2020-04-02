@@ -23,6 +23,8 @@ void Controller::setJoyControl(u16 value) {
 	if (joyControl.content.resetRegs) {
 		joyControl.val = 0;
 		joyStat.val = 0;
+		joyStat.content.isTransferReadyOrStarted = true;
+		joyStat.content.isTransferReadyOrFinished = true;
 	}
 }
 

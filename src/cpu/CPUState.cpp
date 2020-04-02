@@ -8,6 +8,9 @@ void CPUState::setCop0Reg(u32 index, u32 val) {
 		// cause register
 		// mtc0 can only modify the 8th and 9th bits (SW)
 		*cause &= ~(0b11 << 8);
+		if ((*cause & val & (0b11 << 8)) != 0) {
+			throw_error("Unimplemented software interrupt!");
+		}
 		*cause |= val & (0b11 << 8);
 	}
 	else {

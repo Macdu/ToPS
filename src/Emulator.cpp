@@ -118,7 +118,7 @@ void Emulator::renderFrame()
 		// the ratio between CPU cyles and GPU cyles is 11/7
 		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline * 7 / 11; cpuCycle++) {
 			int prevCycle = cpuCycle;
-			for (; cpuCycle < std::max(GPU::cyclesPerScanline * 7 / 11,prevCycle + 70); cpuCycle++) {
+			for (; cpuCycle < std::min(GPU::cyclesPerScanline * 7 / 11,prevCycle + 70); cpuCycle++) {
 				cpu.step();
 			}
 			// check for interrupts and update timers

@@ -53,8 +53,8 @@ void Timers::step(int stepCount, int stepsSinceScanline)
 		auto mode = &counterModes[i].content;
 		u8 source = mode->clockSource;
 		if (source == 0
-			|| (i != 3 && source == 2)
-			|| (i == 3 && source == 3)) {
+			|| (i != 2 && source == 2)
+			|| (i == 2 && source == 1)) {
 			// clock source is system clock
 			counters[i] += cpuCount;
 		}
@@ -86,7 +86,8 @@ void Timers::step(int stepCount, int stepsSinceScanline)
 
 			if (mode->whenToReset == WhenToReset::AfterTarget) {
 				// reset the counter after it reached the target
-				counters[i] %= targets[i];
+				//counters[i] %= targets[i];
+				counters[i] = 0;
 			}
 			else if(counters[i] > 0xFFFF) {
 				if (!mode->hasOverflowed

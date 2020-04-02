@@ -14,12 +14,15 @@ void GPU::initGP0Opcodes()
 	gp0_opcodes_length[0x02] = 3;
 
 	gp0_opcodes_length[0x2C] = 9;
+	gp0_opcodes_length[0x2D] = 9;
+	gp0_opcodes_length[0x2F] = 9;
 	gp0_opcodes_length[0x28] = 5;
 	gp0_opcodes_length[0x30] = 6;
 	gp0_opcodes_length[0x38] = 8;
 
 	gp0_opcodes_length[0x60] = 3;
 	gp0_opcodes_length[0x64] = 4;
+	gp0_opcodes_length[0x65] = 4;
 	gp0_opcodes_length[0x68] = 2;
 
 	gp0_opcodes_length[0xA0] = 3;
@@ -147,7 +150,7 @@ u32 GPU::getHorizontalRes()
 		return 368;
 	}
 	else {
-		switch (gpuProps.horizontalRes1)
+		switch (gpuProps.horizontalRes1 & 3)
 		{
 		case 0:
 			return 256;
@@ -155,8 +158,7 @@ u32 GPU::getHorizontalRes()
 			return 320;
 		case 2:
 			return 512;
-		default:
-			// case 3
+		case 3:
 			return 640;
 		}
 	}
@@ -258,6 +260,16 @@ void GPU::gp0(u32 cmd, u32 opcode)
 		textured4Points();
 		break;
 
+	case 0x2D:
+		// textured 4 points quad
+		textured4Points();
+		break;
+
+	case 0x2F:
+		// textured 4 points quad
+		textured4Points();
+		break;
+
 	case 0x30:
 		// shaded triangle
 		shadedTriangle();
@@ -274,6 +286,11 @@ void GPU::gp0(u32 cmd, u32 opcode)
 		break;
 
 	case 0x64:
+		// sprite
+		sprite();
+		break;
+
+	case 0x65:
 		// sprite
 		sprite();
 		break;

@@ -38,7 +38,7 @@ struct GPUProperties {
 	bool horizontalRes2;
 
 	// bit 17-18 Horizontal Resolution 1 (0=256, 1=320, 2=512, 3=640)
-	bool horizontalRes1;
+	u8 horizontalRes1;
 
 	// bit 19 Vertical Resolution         (0=240, 1=480, when Bit22=1)
 	bool verticalRes;

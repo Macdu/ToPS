@@ -50,6 +50,11 @@ void main(){
 	} else if(renderMode == 2){
 		// direct 15-bit
 		outColor = texture(frameContent, textPos);
+		// hopefully this inequality on floating values does not lead to any problem
+		if(outColor == vec4(0.0,0.0,0.0,0.0)){
+			// transparent
+			discard;
+		}
 	} else {
 		// render color
 		outColor = vec4(fragColor,0.0);

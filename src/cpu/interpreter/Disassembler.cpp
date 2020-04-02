@@ -388,8 +388,14 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x13:
 			sprintf(res, "SaveState(0x%08x)", reg[4]);
 			break;
+		case 0x15:
+			sprintf(res, "strcat(0x%08x,0x%08x)", reg[4], reg[5]);
+			break;
 		case 0x17:
 			sprintf(res, "strcmp(0x%08x,0x%08x)", reg[4], reg[5] );
+			break;
+		case 0x19:
+			sprintf(res, "strcpy(0x%08x,0x%08x)", reg[4], reg[5]);
 			break;
 		case 0x1B:
 			sprintf(res, "strlen(0x%08x)", reg[4]);
@@ -446,6 +452,15 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0xA3:
 			sprintf(res, "DequeueCdIntr()");
 			break;
+		case 0xA9:
+			sprintf(res, "bu_callback_err_busy()");
+			break;
+		case 0xAB:
+			sprintf(res, "_card_info(0x%x)", reg[4]);
+			break;
+		case 0xAD:
+			sprintf(res, "set_card_auto_format(%d)", reg[4]);
+			break;
 		default:
 			printf("BIOS call : 0x%02x\n", reg[9]);
 			throw_error("Undefined A0 bios call!");
@@ -466,7 +481,7 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 			sprintf(res, "CloseEvent(0x%08x)", reg[4]);
 			break;
 		case 0x0B:
-			sprintf(res, "TestEvent(0x%08x)", reg[4]);
+			//sprintf(res, "TestEvent(0x%08x)", reg[4]);
 			break;
 		case 0x0C:
 			sprintf(res, "EnableEvent(0x%08x)", reg[4]);
@@ -492,6 +507,12 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x3D:
 			//sprintf(res, "std_out_putchar(%c)", (u8)reg[4]);
 			break;
+		case 0x42:
+			sprintf(res, "firstfile(0x%08x,0x%08x)", reg[4], reg[5]);
+			break;
+		case 0x45:
+			sprintf(res, "FileDelete(0x%08x)", reg[4]);
+			break;
 		case 0x47:
 			sprintf(res, "AddDevice(0x%08x)", reg[4]);
 			break;
@@ -501,11 +522,17 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x4B:
 			sprintf(res, "StartCard()");
 			break;
+		case 0x4D:
+			sprintf(res, "_card_info_subfunc(0x%x)", reg[4]);
+			break;
 		case 0x4F:
 			sprintf(res, "read_card_sector(0x%x,0x%04x,0x%08x)");
 			break;
 		case 0x50:
 			sprintf(res, "allow_new_card()");
+			break;
+		case 0x58:
+			sprintf(res, "get_bu_callback_port()");
 			break;
 		case 0x5B:
 			sprintf(res, "ChangeClearPad(%d)", reg[4]);

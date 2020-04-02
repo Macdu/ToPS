@@ -46,7 +46,10 @@ void Controller::sendTransferBuffer()
 			receptionBuffer.push(~(controllerState.val >> 8));
 		}
 		else if (transferBuffer == 0x81) {
-			throw_error("Memory card access not implemented!");
+			//throw_error("Memory card access not implemented!");
+			// no memory card connected
+			receptionBuffer.push(0xAA);
+			receptionBuffer.push(0x41);
 		}
 		else {
 			// return some default value

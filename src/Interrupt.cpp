@@ -30,7 +30,7 @@ void Interrupt::requestInterrupt(InterruptType interrupt)
 	if ((interruptMask & interruptStatus) != 0) {
 		*cpu->getState()->cause |= 1 << 10;
 
-		if (Debugging::interrupt) {
+		if (Debugging::interrupt && (u8)interrupt != 0) {
 			constexpr u32 canInterruptBit = (1 << 10) + 1;
 			bool willInterrupt = (*cpu->getState()->sr & canInterruptBit) == canInterruptBit;
 			if(willInterrupt)printf("Interrupt : %d\n", (u8)interrupt);

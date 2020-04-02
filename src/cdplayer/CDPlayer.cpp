@@ -79,13 +79,17 @@ void CDPlayer::setCDReg3(u8 val)
 	switch (index()) {
 	case 1:
 		interruptFlagRegister.val &= ~val;
-		if ((val & 0b111) != 0) {
+		if ((val & 0b111) != 0 && isResponseOccuring) {
 			// clear the response fifo
 			response.type = 0;
+			isResponseOccuring = false;
 			interruptFlagRegister.content.responseType = CDInterrupt::NoInterrupt;
 			if (nextResponse.type != 0) {
 				// switch to the next response
 				response = nextResponse;
+				nextResponse.type = 0;
+				// set a new delay
+				responseClock = *cpuClock + 500;
 			}
 		}
 		break;
@@ -108,8 +112,9 @@ u8 CDPlayer::getCDReg3()
 	}
 }
 
-void CDPlayer::init(Interrupt* interrupt)
+void CDPlayer::init(Interrupt* interrupt, u64* cpuClock)
 {
+	this->cpuClock = cpuClock;
 	this->interrupt = interrupt;
 	indexRegister.content.isParameterFIFOEmpty = true;
 	indexRegister.content.isParameterFIFONotFull = true;
@@ -118,12 +123,13 @@ void CDPlayer::init(Interrupt* interrupt)
 
 void CDPlayer::checkIRQ()
 {
-	if (response.type == 0)return;
+	if (response.type == 0 || *cpuClock < responseClock )return;
+	isResponseOccuring = true;
 	indexRegister.content.isTransmissionBusy = false;
 	indexRegister.content.isResponseFIFONotEmpty = true;
 	interruptFlagRegister.content.responseType = (CDInterrupt)response.type;
 	// check if the bit corresponding to the current IRQ is set
-	if (((1 << (response.type - 1)) & interruptEnableRegister) != 0) {
+	if ((response.type & interruptEnableRegister) == response.type) {
 		interrupt->requestInterrupt(InterruptType::iCDROM);
 	}
 }

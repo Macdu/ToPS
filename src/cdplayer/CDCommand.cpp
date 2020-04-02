@@ -16,6 +16,11 @@ void CDPlayer::sendCommand(u8 cmd)
 		printf("Unknown CD cmd : %02x\n", cmd);
 		throw_error("Unknown CD cmd");
 	}
+	// empty the parameter queue
+	while (!parameterQueue.empty())parameterQueue.pop();
+	indexRegister.content.isParameterFIFOEmpty = true;
+	// set a delay before saying the response is available
+	responseClock = *cpuClock + 500;
 }
 
 void CDPlayer::cmdTest()
@@ -51,6 +56,7 @@ void CDPlayer::cmdGetID()
 {
 	if (Debugging::cd)printf("CD: GetID\n");
 	cdStat.content.isMotorOn = true;
+	cdStat.val = 0x08;
 	sendNormalResponse();
 	response.size = 1;
 	response.content[0] = cdStat.val;

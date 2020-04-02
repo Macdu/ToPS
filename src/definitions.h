@@ -27,6 +27,7 @@ struct Debugging {
 	static bool interpreter;
 	static bool bios;
 	static bool cd;
+	static bool interrupt;
 };
 
 template <class T>

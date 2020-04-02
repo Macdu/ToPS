@@ -15,7 +15,7 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	interrupt.init(&cpu);
 	gpu.init(instance, surface);
 	timers.init(&interrupt, &gpu);
-	cdPlayer.init(&interrupt);
+	cdPlayer.init(&interrupt, &cpu.clockCycle);
 	importBIOS();
 
 	reset();

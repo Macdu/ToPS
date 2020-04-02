@@ -31,6 +31,7 @@ struct CDCmdResponse {
 class CDPlayer {
 private:
 	Interrupt* interrupt;
+	u64* cpuClock;
 
 	static constexpr bool cdDebugging = true;
 	// Bit3,4,5 are bound to 5bit counters; 
@@ -102,8 +103,9 @@ private:
 
 	std::queue<u8> parameterQueue;
 
-
+	u64 responseClock;
 	CDCmdResponse response;
+	bool isResponseOccuring;
 
 	// Contains the second response if the cmd has it
 	CDCmdResponse nextResponse;
@@ -147,7 +149,7 @@ public:
 	void setCDReg3(u8 val);
 	// Address 0x1F801803
 	u8 getCDReg3();
-	void init(Interrupt* interrupt);
+	void init(Interrupt* interrupt, u64* cpuClock);
 	// check if there is a response pending
 	void checkIRQ();
 };

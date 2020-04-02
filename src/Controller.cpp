@@ -13,6 +13,10 @@ void Controller::setJoyControl(u16 value) {
 		joyControl.content.acknowledIRQ = false;
 	}
 
+	if (!joyControl.content.joyPadSelect) {
+		joyControl.content.isSecondPad = false;
+	}
+
 	if (isTransferBufferFilled
 		&& !wasTransferEnabled
 		&& joyControl.content.isTransferEnabled) {
@@ -36,7 +40,7 @@ void Controller::sendTransferBuffer()
 	isExchanging = true;
 	if (receptionBuffer.empty()) {
 		// start new emission
-		if (transferBuffer == 0x01) {
+		if (transferBuffer == 0x01 && !joyControl.content.isSecondPad) {
 			// controller transfer
 			receptionBuffer.push(0xAA);
 			receptionBuffer.push(0x41);
@@ -48,8 +52,8 @@ void Controller::sendTransferBuffer()
 		else if (transferBuffer == 0x81) {
 			//throw_error("Memory card access not implemented!");
 			// no memory card connected
-			receptionBuffer.push(0xAA);
-			receptionBuffer.push(0x41);
+			receptionBuffer.push(0xFF);
+			receptionBuffer.push(0xFF);
 		}
 		else {
 			// return some default value

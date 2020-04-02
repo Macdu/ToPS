@@ -74,7 +74,7 @@ private:
 		struct
 		{
 			bool isTransferEnabled : 1;
-			bool isJoyOutputAuto : 1;
+			bool joyPadSelect : 1;
 			bool isRXNotNormal : 1;
 			bool _useless1 : 1;
 			bool acknowledIRQ : 1;
@@ -87,7 +87,7 @@ private:
 			bool isReceptionInterruptEnabled : 1;
 			bool isACKInterruptEnabled : 1;
 			// 0=/JOY1, 1=/JOY2 (set to LOW when Bit1=1)
-			u8 desiredSlot : 1;
+			bool isSecondPad : 1;
 		} content;
 
 		u16 val;

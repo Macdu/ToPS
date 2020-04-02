@@ -49,6 +49,7 @@ void RenderWindow::keyPressEvent(QKeyEvent* event)
 {
 	if (event->isAutoRepeat())return;
 	handleKey(event->key(), true);
+	if (event->key() == Qt::Key_W)Debugging::interpreter = true;
 }
 
 void RenderWindow::keyReleaseEvent(QKeyEvent* event)

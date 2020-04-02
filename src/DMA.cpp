@@ -127,8 +127,7 @@ void DMA::dmaCopyBlock(int channel)
 				}
 				break;
 			case GPU_DMA:
-				// to be implemented correctly
-				val = 0;
+				val = gpu->getGPURead();
 				break;
 			default:
 				throw_error("DMA copy to this device not implemented yet!");

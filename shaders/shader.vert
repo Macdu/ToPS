@@ -60,7 +60,7 @@ void main(){
 		float(inColor.b) / 255);
 	textLoc = uvec2(
 		(texturePage & 0xF) << 6,
-		(texturePage & 0x10) << 8
+		(texturePage & 0x10) << 4
 	);
 	textPos = vec2(0.0,0.0);
 	clutLoc = uvec2(

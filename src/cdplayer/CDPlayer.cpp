@@ -89,7 +89,7 @@ void CDPlayer::setCDReg3(u8 val)
 				response = nextResponse;
 				nextResponse.type = 0;
 				// set a new delay
-				responseClock = *cpuClock + 500;
+				responseClock = *cpuClock + 1000;
 			}
 		}
 		break;

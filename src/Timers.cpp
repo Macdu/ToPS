@@ -12,11 +12,11 @@ void Timers::init(Interrupt* interrupt, GPU* gpu)
 void Timers::step(int stepCount, int stepsSinceScanline)
 {
 	u32 cpuCount = (u32)stepCount;
-	u32 gpuCount = (u32)(cpuCount * 11) / 7;
+	u32 gpuCount = (u32)(cpuCount / 2) * 3;
 
 	// an HBlank triggers about after 75% of the CPU cycles of the scanline are spent
 	// regardless of the horizontal resolution
-	constexpr int limitForHBlank = (GPU::cyclesPerScanline * 7 * 3) / (11 * 4);
+	constexpr int limitForHBlank = GPU::cyclesPerScanline / 3 * 2 * 3 / 4;
 	if (stepsSinceScanline >= limitForHBlank
 		&& (stepsSinceScanline - stepCount) < limitForHBlank) {
 		// we just entered HBlank

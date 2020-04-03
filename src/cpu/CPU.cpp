@@ -23,7 +23,7 @@ Memory * CPU::getMemory()
 
 void CPU::step()
 {
-	clockCycle++;
+	clockCycle += 2;
 	interpreter.interpret();
 }
 

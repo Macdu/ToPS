@@ -20,7 +20,7 @@ void CDPlayer::sendCommand(u8 cmd)
 	while (!parameterQueue.empty())parameterQueue.pop();
 	indexRegister.content.isParameterFIFOEmpty = true;
 	// set a delay before saying the response is available
-	responseClock = *cpuClock + 500;
+	responseClock = *cpuClock + 1000;
 }
 
 void CDPlayer::cmdTest()

@@ -60,15 +60,9 @@ void Controller::sendTransferBuffer()
 			receptionBuffer.push(0xFF);
 		}
 	}
-	// waits 200 cpu cycles before setting an IRQ
+	// waits 400 cpu cycles before setting an IRQ
 	// it is necessary to wait because this behavior is expected by the BIOS
-	if (receptionBuffer.size() == 1) {
-		// an IRQ is not triggered when the last byte is received
-		joyStat.content.isFifoNotEmpty = true;
-	}
-	else {
-		nextCycleIRQ = (*clockCycle) + 200;
-	}
+	nextCycleIRQ = (*clockCycle) + 400;
 }
 
 void Controller::handleInput(ControllerKey key, bool isPressed)
@@ -87,7 +81,7 @@ void Controller::checkIRQ()
 		nextCycleIRQ = std::numeric_limits<u64>::max();
 		// we have a byte in the FIFO
 		joyStat.content.isFifoNotEmpty = true;
-		if (!joyStat.content.hasIRQ7 && joyControl.content.isACKInterruptEnabled) {
+		if (receptionBuffer.size() != 1 && !joyStat.content.hasIRQ7 && joyControl.content.isACKInterruptEnabled) {
 			// if the previous IRQ was acknowledged and IRQ are enabled
 			joyStat.content.hasIRQ7 = true;
 			interrupt->requestInterrupt(InterruptType::iController);
@@ -97,7 +91,7 @@ void Controller::checkIRQ()
 
 u8 Controller::readData()
 {
-	if (receptionBuffer.size() == 0) {
+	if (receptionBuffer.size() == 0 || !joyStat.content.isFifoNotEmpty) {
 		// the program makes sure the reception buffer is flushed
 		// (I think)
 		return 0;

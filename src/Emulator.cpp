@@ -116,14 +116,16 @@ void Emulator::renderFrame()
 		}
 
 		// the ratio between CPU cyles and GPU cyles is 11/7
-		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline * 7 / 11; cpuCycle++) {
+		// but it looks like, from other emulators that a CPU instruction takes approximately 
+		// 2 cpu cycles, making it about 1/3
+		for (int cpuCycle = 0; cpuCycle < GPU::cyclesPerScanline / 3; cpuCycle++) {
 			int prevCycle = cpuCycle;
-			for (; cpuCycle < std::min(GPU::cyclesPerScanline * 7 / 11,prevCycle + 70); cpuCycle++) {
+			for (; cpuCycle < std::min(GPU::cyclesPerScanline / 3,prevCycle + 50); cpuCycle++) {
 				cpu.step();
 			}
 			// check for interrupts and update timers
-			// every 70 CPU cycles = 110 GPU cycle
-			timers.step(cpuCycle - prevCycle, cpuCycle);
+			// every 50 CPU instruction = 150 GPU cycle
+			timers.step((cpuCycle - prevCycle)*2, cpuCycle*2);
 			controller.checkIRQ();
 			cdPlayer.checkIRQ();
 			interrupt.checkIRQ();

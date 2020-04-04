@@ -111,7 +111,6 @@ void Emulator::renderFrame()
 
 
 		if (scanline == GPU::scanlineVBlankStart - 1) {
-			gpu.drawFrame();
 			timers.vBlankReached();
 		}
 
@@ -131,7 +130,8 @@ void Emulator::renderFrame()
 			interrupt.checkIRQ();
 		}
 	}
-	
+
+	gpu.drawFrame();
 }
 
 void Emulator::handleInput(ControllerKey key, bool isPressed)

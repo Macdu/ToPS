@@ -35,7 +35,7 @@ void CDPlayer::cmdTest()
 	case 0x20:
 		// BCD of the CDROM controller BIOS
 		// value from Nocash doc
-		if (cdDebugging)printf("CD: BIOS Time Test\n");
+		if (Debugging::cd)printf("CD: BIOS Time Test\n");
 		sendNormalResponse();
 		response.size = 4;
 		response.content[0] = 0x94;

@@ -33,7 +33,6 @@ private:
 	Interrupt* interrupt;
 	u64* cpuClock;
 
-	static constexpr bool cdDebugging = true;
 	// Bit3,4,5 are bound to 5bit counters; 
 	// ie. the bits become true at specified amount of reads/writes, 
 	// and thereafter once on every further 32 reads/writes.

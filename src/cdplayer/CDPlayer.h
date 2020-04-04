@@ -101,6 +101,30 @@ private:
 		u8 val;
 	} cdStat;
 
+	// used for bit5 of sector size
+	enum struct CdModeSectorSize : u8 {
+		// size : 0x800
+		DataOnly = 0,
+		// size : 0x924, skips sync bytes
+		WholeSector = 1
+	};
+
+	union {
+		struct {
+			bool allowCDA : 1;
+			bool autoPause : 1;
+			bool enableReportInterrupt : 1;
+			bool enableXAFilter : 1;
+			bool useless : 1;
+			CdModeSectorSize sectorSize : 1;
+			// 1=Send XA-ADPCM sectors to SPU Audio Input
+			bool sendXA_ADPCM : 1;
+			bool isDoubleSpeed : 1;
+		} content;
+
+		u8 val;
+	} cdMode;
+
 	std::queue<u8> parameterQueue;
 
 	u64 responseClock;
@@ -131,6 +155,8 @@ private:
 	void cmdTest();
 	void cmdGetStat();
 	void cmdGetID();
+	void cmdSetMode();
+	void cmdStop();
 
 public:
 	// Address 0x1F801800

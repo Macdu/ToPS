@@ -6,6 +6,12 @@ void CDPlayer::sendCommand(u8 cmd)
 	case 0x01:
 		cmdGetStat();
 		break;
+	case 0x08:
+		cmdStop();
+		break;
+	case 0x0E:
+		cmdSetMode();
+		break;
 	case 0x19: 
 		cmdTest();
 		break;
@@ -78,4 +84,26 @@ void CDPlayer::cmdGetID()
 	nextResponse.content[0] = 0x08;
 	nextResponse.content[1] = 0x40;
 	for (int i = 2; i < 8; i++)nextResponse.content[i] = 0x00;
+}
+
+void CDPlayer::cmdSetMode()
+{
+	if (Debugging::cd)printf("CD: SetMode(0x%02x)\n", parameterQueue.front());
+	cdMode.val = parameterQueue.front();
+	sendNormalResponse();
+	response.size = 1;
+	response.content[0] = cdStat.val;
+}
+
+void CDPlayer::cmdStop()
+{
+	if (Debugging::cd)printf("CD: Stop\n");
+	cdStat.content.activity = CDStatusActivity::DoingNothing;
+	sendNormalResponse();
+	response.size = 1;
+	response.content[0] = cdStat.val;
+	cdStat.content.isMotorOn = false;
+	sendAdditionalResponse();
+	nextResponse.size = 1;
+	nextResponse.content[0] = cdStat.val;
 }

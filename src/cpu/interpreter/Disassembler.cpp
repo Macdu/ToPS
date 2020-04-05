@@ -507,6 +507,9 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x3D:
 			//sprintf(res, "std_out_putchar(%c)", (u8)reg[4]);
 			break;
+		case 0x3F:
+			//sprintf(res, "std_out_puts(0x%08x)", reg[4]);
+			break;
 		case 0x42:
 			sprintf(res, "firstfile(0x%08x,0x%08x)", reg[4], reg[5]);
 			break;
@@ -530,6 +533,9 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 			break;
 		case 0x50:
 			sprintf(res, "allow_new_card()");
+			break;
+		case 0x56:
+			sprintf(res, "GetC0Table()");
 			break;
 		case 0x58:
 			sprintf(res, "get_bu_callback_port()");

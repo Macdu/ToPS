@@ -119,6 +119,7 @@ void CDPlayer::init(Interrupt* interrupt, u64* cpuClock)
 	indexRegister.content.isParameterFIFOEmpty = true;
 	indexRegister.content.isParameterFIFONotFull = true;
 	cdStat.content.isShellOpened = true;
+	interruptEnableRegister = 0x1F;
 }
 
 void CDPlayer::checkIRQ()

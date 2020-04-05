@@ -24,7 +24,10 @@ void GPU::initGP0Opcodes()
 	gp0_opcodes_length[0x64] = 4;
 	gp0_opcodes_length[0x65] = 4;
 	gp0_opcodes_length[0x68] = 2;
+	gp0_opcodes_length[0x74] = 3;
+	gp0_opcodes_length[0x7D] = 3;
 
+	gp0_opcodes_length[0x80] = 4;
 	gp0_opcodes_length[0xA0] = 3;
 	gp0_opcodes_length[0xC0] = 3;
 
@@ -287,17 +290,32 @@ void GPU::gp0(u32 cmd, u32 opcode)
 
 	case 0x64:
 		// sprite
-		sprite();
+		sprite(0);
 		break;
 
 	case 0x65:
 		// sprite
-		sprite();
+		sprite(0);
 		break;
 
 	case 0x68:
 		// dot
 		dot();
+		break;
+
+	case 0x74:
+		// 8x8 sprite
+		sprite(8);
+		break;
+
+	case 0x7D:
+		// 16x16 sprite
+		sprite(16);
+		break;
+
+	case 0x80:
+		// Copy Rectangle (VRAM to VRAM)
+		rectangleVRAMCopy();
 		break;
 
 	case 0xA0:
@@ -450,11 +468,9 @@ void GPU::gp1(u32 cmd)
 
 void GPU::rectangleDraw()
 {
-	// I just "disable" the current scissor and then draw the rectangle
-	vk::Rect2D currScissor = renderer.sceneRendering.currentScissor;
-	renderer.sceneRendering.setScissor(renderer.sceneRendering.frameScissor);
+	setGlobalDrawingContext();
 	rectangle();
-	renderer.sceneRendering.setScissor(currScissor);
+	endGlobalDrawingContext();
 }
 
 void GPU::textured4Points()
@@ -594,7 +610,7 @@ void GPU::dot()
 	pushVertexColor({ vertex.x, vertex.y + 2 }, color);
 }
 
-void GPU::sprite()
+void GPU::sprite(i16 side)
 {
 	Point<i16> topLeft;
 	Point<i16> size;
@@ -609,7 +625,12 @@ void GPU::sprite()
 	gp0Queue.pop();
 	clutID = word >> 16;
 	textLoc = extractTextLoc(word);
-	size = readPoint();
+	if (side == 0) {
+		size = readPoint();
+	}
+	else {
+		size = { side, side };
+	}
 	std::array<Point<i16>, 4> vertices = getRectangle(topLeft, size);
 	std::array<Point<u8>, 4> textLocs = getRectangle<u8>(textLoc, { (u8)size.x, (u8)size.y });
 
@@ -621,6 +642,36 @@ void GPU::sprite()
 	}
 	if (Debugging::gpu)printf("GPU : Draw sprite : (%d,%d) [%d,%d]\n",
 		topLeft.x, topLeft.y, size.x, size.y);
+}
+
+void GPU::rectangleVRAMCopy()
+{
+	setGlobalDrawingContext();
+
+	readColor();
+	Point<i16> sourceTopLeft = readPoint();
+	Point<i16> destTopLeft = readPoint();
+	Point<i16> size = readPoint();
+
+	std::array<Point<i16>, 4> sourceVertices = getRectangle(sourceTopLeft, size);
+	std::array<Point<i16>, 4> destVertices = getRectangle(destTopLeft, size);
+
+	for (int i = 0; i < 2; i++) {
+		for (int v = 0; v < 3; v++) {
+			renderer.sceneRendering.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] = {
+				destVertices[i + v].toIVec2(),
+				{0,0,0},
+				{(uint)sourceVertices[i + v].x, (uint)sourceVertices[i + v].y},
+				0,
+				1 << 8
+			};
+		}
+	}
+
+	if (Debugging::gpu)printf("GPU : VRAM rectangle copy (%d,%d) -> (%d,%d) [%d,%d]\n",
+		sourceTopLeft.x, sourceTopLeft.y, destTopLeft.x, destTopLeft.y, size.x, size.y);
+
+	endGlobalDrawingContext();
 }
 
 void GPU::sendRectToFrameBuffer()

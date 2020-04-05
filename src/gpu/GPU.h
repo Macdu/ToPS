@@ -55,7 +55,9 @@ public:
 	void shadedTriangle();
 	void rectangle();
 	void dot();
-	void sprite();
+	// calling it with side=0 makes this function reads the width and height from gp0 parameters
+	void sprite(i16 side);
+	void rectangleVRAMCopy();
 
 	void sendRectToFrameBuffer();
 	void sendFrameBufferToCPU();
@@ -104,4 +106,22 @@ private:
 			{add(topLeft.x, size.x), add(topLeft.y, size.y)}
 		};
 	}
+
+	vk::Rect2D currDrawingScissor;
+	glm::ivec2 currDrawingOffset;
+	// used to remove the drawing offset and scissors that are set for a specific out of border draw
+	inline void setGlobalDrawingContext() {
+		// I just "disable" the current scissor and then draw the rectangle
+		currDrawingScissor = renderer.sceneRendering.currentScissor;
+		// And the current drawing offset too
+		currDrawingOffset = gpuProps.drawingOffset;
+		gpuProps.drawingOffset = { 0,0 };
+		renderer.sceneRendering.setScissor(renderer.sceneRendering.frameScissor);
+	};
+
+	inline void endGlobalDrawingContext() {
+		gpuProps.drawingOffset = currDrawingOffset;
+		renderer.sceneRendering.setScissor(currDrawingScissor);
+	}
+
 };

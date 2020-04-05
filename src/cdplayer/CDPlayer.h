@@ -149,6 +149,20 @@ private:
 		nextResponse.pos = 0;
 	}
 
+	// send an INT3(stat)
+	inline void sendINT3Stat() {
+		sendNormalResponse();
+		response.size = 1;
+		response.content[0] = cdStat.val;
+	}
+
+	// send an INT2(stat)
+	inline void sendINT2Stat() {
+		sendAdditionalResponse();
+		nextResponse.size = 1;
+		nextResponse.content[0] = cdStat.val;
+	}
+
 	// send a CDPlayer command
 	void sendCommand(u8 cmd);
 	void cmdTest();
@@ -156,6 +170,8 @@ private:
 	void cmdGetID();
 	void cmdSetMode();
 	void cmdStop();
+	void cmdInit();
+	void cmdDemute();
 
 public:
 	// Address 0x1F801800

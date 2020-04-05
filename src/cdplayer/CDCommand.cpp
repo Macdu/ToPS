@@ -9,6 +9,12 @@ void CDPlayer::sendCommand(u8 cmd)
 	case 0x08:
 		cmdStop();
 		break;
+	case 0x0A:
+		cmdInit();
+		break;
+	case 0x0c:
+		cmdDemute();
+		break;
 	case 0x0E:
 		cmdSetMode();
 		break;
@@ -51,9 +57,7 @@ void CDPlayer::cmdTest()
 void CDPlayer::cmdGetStat()
 {
 	if (Debugging::cd)printf("CD: GetStat\n");
-	sendNormalResponse();
-	response.size = 1;
-	response.content[0] = cdStat.val;
+	sendINT3Stat();
 	// reset the shellOpened bit
 	cdStat.content.isShellOpened = false;
 }
@@ -62,10 +66,8 @@ void CDPlayer::cmdGetID()
 {
 	if (Debugging::cd)printf("CD: GetID\n");
 	cdStat.content.isMotorOn = true;
-	cdStat.val = 0x08;
-	sendNormalResponse();
-	response.size = 1;
-	response.content[0] = cdStat.val;
+	sendINT3Stat();
+
 	sendAdditionalResponse();
 	nextResponse.size = 8;
 	// stat,flags,type,atip,"SCEx"
@@ -78,32 +80,46 @@ void CDPlayer::cmdGetID()
 	nextResponse.content[4] = 'S';
 	nextResponse.content[5] = 'C';
 	nextResponse.content[6] = 'E';
-	nextResponse.content[7] = 'A';
-	*/
+	nextResponse.content[7] = 'A';*/
+	// this part is if you want no CD in the drive
+	
+	cdStat.val = 0x08;
 	nextResponse.type = 5;
 	nextResponse.content[0] = 0x08;
 	nextResponse.content[1] = 0x40;
 	for (int i = 2; i < 8; i++)nextResponse.content[i] = 0x00;
+	
 }
 
 void CDPlayer::cmdSetMode()
 {
 	if (Debugging::cd)printf("CD: SetMode(0x%02x)\n", parameterQueue.front());
 	cdMode.val = parameterQueue.front();
-	sendNormalResponse();
-	response.size = 1;
-	response.content[0] = cdStat.val;
+	sendINT3Stat();
 }
 
 void CDPlayer::cmdStop()
 {
 	if (Debugging::cd)printf("CD: Stop\n");
 	cdStat.content.activity = CDStatusActivity::DoingNothing;
-	sendNormalResponse();
-	response.size = 1;
-	response.content[0] = cdStat.val;
+	sendINT3Stat();
 	cdStat.content.isMotorOn = false;
-	sendAdditionalResponse();
-	nextResponse.size = 1;
-	nextResponse.content[0] = cdStat.val;
+	sendINT2Stat();
+}
+
+void CDPlayer::cmdInit()
+{
+	if (Debugging::cd)printf("CD: Init\n");
+	cdMode.val = 0;
+	sendINT3Stat();
+	cdStat.content.isMotorOn = true;
+	sendINT2Stat();
+}
+
+void CDPlayer::cmdDemute()
+{
+	if (Debugging::cd)printf("CD: Demute\n");
+	sendINT3Stat();
+	cdMode.content.allowCDA = true;
+	cdMode.content.sendXA_ADPCM = true;
 }

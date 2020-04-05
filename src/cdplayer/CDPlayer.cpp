@@ -20,6 +20,9 @@ void CDPlayer::setCDReg1(u8 val)
 	case 0:
 		sendCommand(val);
 		break;
+	case 3:
+		// volume
+		break;
 	default:
 		throw_error("Unimplemented CDReg1 modification!");
 		break;
@@ -58,6 +61,10 @@ void CDPlayer::setCDReg2(u8 val)
 	case 1:
 		interruptEnableRegister = val;
 		break;
+	case 2:
+	case 3:
+		// volume
+		break;
 	default:
 		throw_error("Unimplemented CDReg2 modification!");
 		break;
@@ -77,6 +84,9 @@ u8 CDPlayer::getCDReg2()
 void CDPlayer::setCDReg3(u8 val)
 {
 	switch (index()) {
+	case 0:
+		// TODO: remove
+		break;
 	case 1:
 		interruptFlagRegister.val &= ~val;
 		if ((val & 0b111) != 0 && isResponseOccuring) {
@@ -92,6 +102,10 @@ void CDPlayer::setCDReg3(u8 val)
 				responseClock = *cpuClock + 1000;
 			}
 		}
+		break;
+	case 2:
+	case 3:
+		// volume
 		break;
 	default:
 		throw_error("Unimplemented CDReg3 modification!");

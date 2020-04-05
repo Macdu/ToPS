@@ -400,6 +400,9 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x1B:
 			sprintf(res, "strlen(0x%08x)", reg[4]);
 			break;
+		case 0x2B:
+			sprintf(res, "memset(0x%08x,0x%02x,0x%x)", reg[4], reg[5], reg[6]);
+			break;
 		case 0x25:
 			sprintf(res, "toupper(%c)", (char)reg[4]);
 			break;
@@ -492,6 +495,12 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x13:
 			sprintf(res, "StartPad()");
 			break;
+		case 0x15:
+			sprintf(res, "OutdatedPadInitAndStart(0x%08x,0x%08x,unused,unused)", reg[4], reg[5]);
+			break;
+		case 0x16:
+			sprintf(res, "OutdatedPadGetButtons()");
+			break;
 		case 0x17:
 			//sprintf(res, "ReturnFromException()");
 			break;
@@ -536,6 +545,9 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 			break;
 		case 0x56:
 			sprintf(res, "GetC0Table()");
+			break;
+		case 0x57:
+			sprintf(res, "GetB0Table()");
 			break;
 		case 0x58:
 			sprintf(res, "get_bu_callback_port()");

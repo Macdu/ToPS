@@ -51,6 +51,14 @@ struct Color {
 	}
 };
 
+inline u8 bcdToHex(u8 val) {
+	return ((val >> 4) * 10) + (val & 0xF);
+}
+
+inline u8 hexToBcd(u8 val) {
+	return ((val / 10) << 4) | (val % 10);
+}
+
 static void throw_error(const char* error) {
 	fflush(stdout);
 	qFatal(error);

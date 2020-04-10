@@ -8,10 +8,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(Vulkan REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(glm)
+find_package(glm REQUIRED)
 
 SET(SOURCES 
 	src/cdplayer/CDCommand.cpp
+	src/cdplayer/CDFile.cpp
 	src/cdplayer/CDPlayer.cpp
 	src/cpu/gte/GTE.cpp
 	src/cpu/interpreter/Disassembler.cpp
@@ -36,6 +37,7 @@ SET(SOURCES
 )
 
 SET(HEADERS 
+	src/cdplayer/CDFile.h
 	src/cdplayer/CDPlayer.h
 	src/cpu/gte/GTE.h
 	src/cpu/CPU.h

@@ -34,12 +34,12 @@ u8 CDPlayer::getCDReg1()
 	switch (index()) {
 	case 1:
 		// returns response
-		if (response.pos == response.size) {
+		if (currResponse.pos == currResponse.size) {
 			return 0;
 		}
 		else {
-			u8 res = response.content[response.pos++];
-			if (response.pos == response.size) {
+			u8 res = currResponse.content[currResponse.pos++];
+			if (currResponse.pos == currResponse.size) {
 				// everything was read
 				indexRegister.content.isResponseFIFONotEmpty = false;
 			}
@@ -89,15 +89,11 @@ void CDPlayer::setCDReg3(u8 val)
 		break;
 	case 1:
 		interruptFlagRegister.val &= ~val;
-		if ((val & 0b111) != 0 && isResponseOccuring) {
+		if ((val & 0b111) != 0 && currResponse.type != 0) {
 			// clear the response fifo
-			response.type = 0;
-			isResponseOccuring = false;
+			currResponse.type = 0;
 			interruptFlagRegister.content.responseType = CDInterrupt::NoInterrupt;
-			if (nextResponse.type != 0) {
-				// switch to the next response
-				response = nextResponse;
-				nextResponse.type = 0;
+			if (!responseQueue.empty()) {
 				// set a new delay
 				responseClock = *cpuClock + 1000;
 			}
@@ -117,9 +113,10 @@ u8 CDPlayer::getCDReg3()
 {
 	switch (index())
 	{
+	case 0:
+		return interruptEnableRegister;
 	case 1:
 		return interruptFlagRegister.val;
-		break;
 	default:
 		throw_error("Unimplemented CDReg3 access!");
 		return 0;
@@ -134,17 +131,43 @@ void CDPlayer::init(Interrupt* interrupt, u64* cpuClock)
 	indexRegister.content.isParameterFIFONotFull = true;
 	cdStat.content.isShellOpened = true;
 	interruptEnableRegister = 0x1F;
+	cdFile.init("game/game.bin");
+}
+
+void CDPlayer::destroy()
+{
+	cdFile.destroy();
 }
 
 void CDPlayer::checkIRQ()
 {
-	if (response.type == 0 || *cpuClock < responseClock )return;
-	isResponseOccuring = true;
-	indexRegister.content.isTransmissionBusy = false;
-	indexRegister.content.isResponseFIFONotEmpty = true;
-	interruptFlagRegister.content.responseType = (CDInterrupt)response.type;
-	// check if the bit corresponding to the current IRQ is set
-	if ((response.type & interruptEnableRegister) == response.type) {
-		interrupt->requestInterrupt(InterruptType::iCDROM);
+	if (currResponse.type == 0 
+		&& !responseQueue.empty()
+		&& *cpuClock >= responseClock) {
+		// switch to the next response
+		currResponse = responseQueue.front();
+		responseQueue.pop();
+
+	}
+
+	if (currResponse.type != 0) {
+
+		indexRegister.content.isTransmissionBusy = false;
+		indexRegister.content.isResponseFIFONotEmpty = true;
+		interruptFlagRegister.content.responseType = (CDInterrupt)currResponse.type;
+		// check if the bit corresponding to the current IRQ is set
+		if ((currResponse.type & interruptEnableRegister) == currResponse.type) {
+			interrupt->requestInterrupt(InterruptType::iCDROM);
+		}
+	}
+
+	if (cdStat.content.activity == CDStatusActivity::Reading 
+		&& currResponse.type == 0
+		&& *cpuClock >= nextDataClock) {
+		sendINT1Stat();
+		indexRegister.content.isDataFIFONotEmpty = true;
+		// should be about 1/75th of a second
+		// I put half less just in case
+		nextDataClock = *cpuClock + 200000;
 	}
 }

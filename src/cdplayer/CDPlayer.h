@@ -3,6 +3,7 @@
 #include <queue>
 
 #include "../definitions.h"
+#include "CDFile.h"
 
 class Interrupt;
 
@@ -30,6 +31,9 @@ struct CDCmdResponse {
 // implements a PSX CDPlayer
 class CDPlayer {
 private:
+	CDFile cdFile;
+	CDPos nextCDPos;
+
 	Interrupt* interrupt;
 	u64* cpuClock;
 
@@ -127,40 +131,56 @@ private:
 	std::queue<u8> parameterQueue;
 
 	u64 responseClock;
-	CDCmdResponse response;
-	bool isResponseOccuring;
+	std::queue<CDCmdResponse> responseQueue;
+	CDCmdResponse currResponse;
 
-	// Contains the second response if the cmd has it
-	CDCmdResponse nextResponse;
+
+	// Contains the clock for the next INT1 to send
+	u64 nextDataClock;
 
 	// quick access to the index value
 	inline u8 index() { return indexRegister.content.index; };
 
 	// send an INT3 response
-	inline void sendNormalResponse() {
+	inline CDCmdResponse sendNormalResponse() {
+		indexRegister.content.isTransmissionBusy = true;
+		CDCmdResponse response;
 		response.type = 3;
 		response.pos = 0;
-		indexRegister.content.isTransmissionBusy = true;
+		return response;
 	}
 
 	// send an INT2 response
-	inline void sendAdditionalResponse() {
-		nextResponse.type = 2;
-		nextResponse.pos = 0;
+	inline CDCmdResponse sendAdditionalResponse() {
+		CDCmdResponse response;
+		response.type = 2;
+		response.pos = 0;
+		return response;
+	}
+
+	// send an INT1(stat)
+	inline void sendINT1Stat() {
+		auto response = sendNormalResponse();
+		response.type = 1;
+		response.size = 1;
+		response.content[0] = cdStat.val;
+		responseQueue.push(response);
 	}
 
 	// send an INT3(stat)
 	inline void sendINT3Stat() {
-		sendNormalResponse();
+		auto response = sendNormalResponse();
 		response.size = 1;
 		response.content[0] = cdStat.val;
+		responseQueue.push(response);
 	}
 
 	// send an INT2(stat)
 	inline void sendINT2Stat() {
-		sendAdditionalResponse();
-		nextResponse.size = 1;
-		nextResponse.content[0] = cdStat.val;
+		auto response = sendAdditionalResponse();
+		response.size = 1;
+		response.content[0] = cdStat.val;
+		responseQueue.push(response);
 	}
 
 	// send a CDPlayer command
@@ -172,6 +192,9 @@ private:
 	void cmdStop();
 	void cmdInit();
 	void cmdDemute();
+	void cmdSetLoc();
+	void cmdSeekL();
+	void cmdRead();
 
 public:
 	// Address 0x1F801800
@@ -191,6 +214,7 @@ public:
 	// Address 0x1F801803
 	u8 getCDReg3();
 	void init(Interrupt* interrupt, u64* cpuClock);
+	void destroy();
 	// check if there is a response pending
 	void checkIRQ();
 };

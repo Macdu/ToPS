@@ -97,6 +97,7 @@ void Emulator::reset()
 
 void Emulator::destroy()
 {
+	cdPlayer.destroy();
 	gpu.renderer.cleanup();
 }
 

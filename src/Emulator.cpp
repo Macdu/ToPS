@@ -11,6 +11,7 @@ void Emulator::init(RenderWindow* window, vk::Instance instance, vk::SurfaceKHR 
 	cpu.init(this);
 	dma.ram = &ram;
 	dma.gpu = &gpu;
+	dma.cdPlayer = &cdPlayer;
 	gpu.emu = this;
 	interrupt.init(&cpu);
 	gpu.init(instance, surface);

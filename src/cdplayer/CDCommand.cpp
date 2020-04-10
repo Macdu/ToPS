@@ -15,6 +15,9 @@ void CDPlayer::sendCommand(u8 cmd)
 	case 0x08:
 		cmdStop();
 		break;
+	case 0x09:
+		cmdPause();
+		break;
 	case 0x0A:
 		cmdInit();
 		break;
@@ -175,4 +178,13 @@ void CDPlayer::cmdRead()
 	indexRegister.content.isDataFIFONotEmpty = false;
 	cdStat.content.activity = CDStatusActivity::Reading;
 	nextDataClock = *cpuClock + 200000;
+}
+
+void CDPlayer::cmdPause()
+{
+	if (Debugging::cd)printf("CD: Pause\n");
+	sendINT3Stat();
+
+	cdStat.content.activity = CDStatusActivity::DoingNothing;
+	sendINT2Stat();
 }

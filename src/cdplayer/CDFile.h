@@ -31,12 +31,18 @@ public:
 	void destroy();
 
 	void setSector(const CDPos pos);
+	u8 getData();
 private:
 	char* fileName;
 	FILE* file;
 
 	u32 fileSize;
 	u32 sector;
-	
+	u32 currPos;
+	bool needReload;
+
 	static constexpr u32 sector_file_size = 0x930;
+	u8 data[sector_file_size];
+	
+	void loadSector();
 };

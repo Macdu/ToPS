@@ -4,6 +4,7 @@
 
 class RAM;
 class GPU;
+class CDPlayer;
 
 enum DMAChannel {
 	MDECin = 0,
@@ -73,6 +74,7 @@ class DMA {
 public:
 	RAM* ram;
 	GPU* gpu;
+	CDPlayer* cdPlayer;
 
 	// specify is each channel is enabled or disabled
 	// not really used right now

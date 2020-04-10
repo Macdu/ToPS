@@ -2,6 +2,7 @@
 
 #include "RAM.h"
 #include "gpu/GPU.h"
+#include "cdplayer/CDPlayer.h"
 
 // for debugging purposes
 #include "cpu/interpreter/Interpreter.h"
@@ -129,6 +130,12 @@ void DMA::dmaCopyBlock(int channel)
 			case GPU_DMA:
 				val = gpu->getGPURead();
 				break;
+			case CDROM:
+				val = (u32)cdPlayer->readData()
+					| ((u32)cdPlayer->readData() << 8)
+					| ((u32)cdPlayer->readData() << 16)
+					| ((u32)cdPlayer->readData() << 24);
+				break;
 			default:
 				throw_error("DMA copy to this device not implemented yet!");
 				break;
@@ -138,6 +145,9 @@ void DMA::dmaCopyBlock(int channel)
 		else {
 			u32 val = ram->load32Ram(addr);
 			switch (static_cast<DMAChannel>(channel)) {
+			case MDECin:
+				// TODO: remove
+				break;
 			case GPU_DMA:
 				gpu->pushCmdGP0(val);
 				break;

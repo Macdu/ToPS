@@ -195,6 +195,7 @@ private:
 	void cmdSetLoc();
 	void cmdSeekL();
 	void cmdRead();
+	void cmdPause();
 
 public:
 	// Address 0x1F801800
@@ -213,6 +214,10 @@ public:
 	void setCDReg3(u8 val);
 	// Address 0x1F801803
 	u8 getCDReg3();
+	inline u8 readData() {
+		return cdFile.getData();
+	}
+
 	void init(Interrupt* interrupt, u64* cpuClock);
 	void destroy();
 	// check if there is a response pending

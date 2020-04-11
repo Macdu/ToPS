@@ -29,6 +29,7 @@ struct Debugging {
 	static bool cd;
 	static bool interrupt;
 	static bool gpu;
+	static bool gte;
 };
 
 template <class T>

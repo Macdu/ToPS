@@ -5,3 +5,4 @@ bool Debugging::bios = true;
 bool Debugging::cd = true;
 bool Debugging::interrupt = true;
 bool Debugging::gpu = false;
+bool Debugging::gte = false;

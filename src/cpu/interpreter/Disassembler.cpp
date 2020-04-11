@@ -310,7 +310,8 @@ std::string Disassembler::disassemble(u32 instr)
 			}
 		}
 		else {
-
+			// gte cmd
+			sprintf(res, "gte cmd");
 		}
 		break;
 	}
@@ -373,6 +374,16 @@ std::string Disassembler::disassemble(u32 instr)
 	case 0b101110:
 		// swr $rt, imm($rs)
 		sprintf(res, "swr $r%d, 0x%04x($r%d)", regt(instr), imm(instr), regs(instr));
+		break;
+
+	case 0b110010:
+		// lwc2 $cop2_datat, imm($rs)
+		sprintf(res, "lwc2 $cop2_data%d, 0x%04x($r%d)", regt(instr), imm(instr), regs(instr));
+		break;
+
+	case 0b111010:
+		// swc2 $cop2_datat, imm($rs)
+		sprintf(res, "swc2 $cop2_data%d, 0x%04x($r%d)", regt(instr), imm(instr), regs(instr));
 		break;
 	}
 

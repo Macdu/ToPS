@@ -19,6 +19,89 @@ u32 GTE::countLeadingBits(i32 val)
 	}
 }
 
+void GTE::rtps(int i)
+{
+	if (Debugging::gte && tempCmd.content.cmd == 0x01)
+		printf("GTE: RTPS\n");
+	//TODO: handle flags
+	glm::i64vec3 res = rotation * vector[i] + (translation << glm::i64vec3(12,12,12));
+	i64 s3z = res.z >> 12;
+
+	screen[0] = screen[1];
+	screen[1] = screen[2];
+
+	screen[2].z = screen[3].z;
+	screen[3].z = s3z;
+
+	if (tempCmd.content.shiftIR) {
+		res >>= glm::i64vec3(12, 12, 12);
+	}
+	mac.yzw = res;
+	ir.yzw = res;
+
+	i64 planeComp = (((planeDistance << 17) / s3z) + 1) / 2;
+	screen[2].x = (planeComp * ir[1] + screenOffset.x) >> 16;
+	screen[2].y = (planeComp * ir[2] + screenOffset.y) >> 16;
+
+	mac[0] = (planeComp * depthQueingCoeff + depthQueingOffset);
+	ir[0] = mac[0] >> 12;
+}
+
+void GTE::rtpt()
+{
+	if (Debugging::gte)printf("GTE: RTPT\n");
+	// rtpt repeats three times rtps
+	for (int i = 0; i < 3; i++)
+		rtps(i);
+}
+
+void GTE::nclip()
+{
+	if (Debugging::gte)printf("GTE: NCLIP\n");
+	// nclip gives 
+	// (screen0 - screen1)^(screen1 - screen2).z
+	// which is the order the 3 vertices are
+	auto v0 = screen[0] - screen[1];
+	auto v1 = screen[1] - screen[2];
+	mac[0] = v0.x * v1.y - v0.y * v1.x;
+	
+}
+
+void GTE::ncds(int i)
+{
+	if (Debugging::gte && tempCmd.content.cmd == 0x13)
+		printf("GTE: NCDS\n");
+
+	// only used to set flags
+	/*
+	auto res1 = light * vector[i];
+	auto res2 = backgroundColor << glm::i64vec3(12, 12, 12) 
+		+ lightColor * *reinterpret_cast<glm::i64vec3*>(ir);
+	*/
+	glm::i64vec3 col = glm::i64vec3((i64)rgbc.r << 4, (i64)rgbc.g << 4, (i64)rgbc.b << 4);
+	glm::i64vec3 fcShifted = farColor << glm::i64vec3(12, 12, 12);
+	glm::i64vec3 ir0 = glm::i64vec3(ir[0], ir[0], ir[0]);
+	auto res = col * ir.yzw + ir0 * (fcShifted - col * ir.yzw);
+	if (tempCmd.content.shiftIR) {
+		res >>= glm::i64vec3(12, 12, 12);
+	}
+
+	mac.yzw = res;
+	ir.yzw = res;
+	res >>= glm::i64vec3(4, 4, 4);
+	color[0] = color[1];
+	color[1] = color[2];
+	color[2] = glm::u8vec4(res, rgbc[3]);
+}
+
+void GTE::avsz3()
+{
+	if (Debugging::gte)printf("GTE: AVSZ3\n");
+
+	mac[0] = (screen[0].z + screen[1].z + screen[2].z) * avgZ3;
+	otz = mac[0] >> 12;
+}
+
 u32 GTE::getData(u32 reg)
 {
 	switch (reg & 0x1F) {
@@ -68,7 +151,7 @@ u32 GTE::getData(u32 reg)
 	case 22:
 		return *reinterpret_cast<u32*>(&color[2]);
 	case 23:
-		return res1;
+		return (u32)res1;
 	case 24:
 		return (u32)mac[0];
 	case 25:
@@ -80,11 +163,11 @@ u32 GTE::getData(u32 reg)
 	case 28:
 	case 29:
 		// converts color to 15bit
-		return (u32)std::clamp<i16>(ir[1] >> 7, 0, 0x1F)
-			| (u32)std::clamp<i16>(ir[2] >> 7, 0, 0x1F) << 5
-			| (u32)std::clamp<i16>(ir[3] >> 7, 0, 0x1F) << 10;
+		return (u32)std::clamp<i16>((i16)ir[1] >> 7, 0, 0x1F)
+			| (u32)std::clamp<i16>((i16)ir[2] >> 7, 0, 0x1F) << 5
+			| (u32)std::clamp<i16>((i16)ir[3] >> 7, 0, 0x1F) << 10;
 	case 30:
-		return lzcs;
+		return (u32)lzcs;
 	case 31:
 		return lzcr;
 	}
@@ -190,15 +273,15 @@ void GTE::setData(u32 reg, u32 val)
 		mac[3] = (i32)val;
 		break;
 	case 28:
-		ir[1] = (val & 0x1F) << 7;
-		ir[2] = ((val >> 5) & 0x1F) << 7;
-		ir[3] = ((val >> 10) & 0x1F) << 7;
+		ir[1] = (i32)((val & 0x1F) << 7);
+		ir[2] = (i32)(((val >> 5) & 0x1F) << 7);
+		ir[3] = (i32)(((val >> 10) & 0x1F) << 7);
 		break;
 	case 29:
 		break;
 	case 30:
 		lzcs = (i32)val;
-		lzcr = countLeadingBits(lzcs);
+		lzcr = countLeadingBits((i32)val);
 		break;
 	case 31:
 		break;
@@ -388,5 +471,29 @@ void GTE::setControl(u32 reg, u32 val)
 	case 31:
 		flag = val & 0x7FFFF000;
 		break;
+	}
+}
+
+void GTE::sendCmd(u32 cmd)
+{
+	// keep the interesting part of the cmd
+	//cmd &= (1 << 25) - 1;
+	tempCmd.val = cmd;
+	switch (tempCmd.content.cmd) {
+	case 0x06:
+		nclip();
+		break;
+	case 0x13:
+		ncds(0);
+		break;
+	case 0x2D:
+		avsz3();
+		break;
+	case 0x30:
+		rtpt();
+		break;
+	default:
+		printf("COP2 cmd not recongnized : 0x%02x\n", cmd & 0x3F);
+		throw_error("Unknown cop2 cmd!");
 	}
 }

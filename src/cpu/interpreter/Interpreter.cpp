@@ -10,6 +10,7 @@ void Interpreter::ps1_putchar(char val)
 	if (bufferSize == 1024 || val == '\n' || val == 0) {
 		buffer[bufferSize - 1] = 0;
 		printf("PS out : %s\n", buffer + 1);
+		fflush(stdout);
 		bufferSize = 0;
 	}
 }
@@ -439,12 +440,12 @@ void Interpreter::interpret()
 			{
 				
 			case 0b00000:
-				// mfc2 $rt, $cpo2_datad
+				// mfc2 $rt, $cop2_datad
 				setDelayReg(regt(instr),gte->getData(regd(instr)));
 				break;
 
 			case 0b00010:
-				// cfc2 $rt, $cpo2_ctrld
+				// cfc2 $rt, $cop2_ctrld
 				setDelayReg(regt(instr), gte->getControl(regd(instr)));
 				break;
 
@@ -465,7 +466,7 @@ void Interpreter::interpret()
 			}
 		}
 		else {
-			throw_error("COP2 cmd not implemented!");
+			gte->sendCmd(instr);
 		}
 		break;
 	}
@@ -641,6 +642,20 @@ void Interpreter::interpret()
 			break;
 		}
 		memory->write32(addr & ~3, val);
+		break;
+	}
+
+	case 0b110010: {
+		// lwc2 $cop2_datat, imm($rs)
+		u32 addr = reg[regs(instr)] + immsign(instr);
+		gte->setData(regt(instr), memory->read32(addr));
+		break;
+	}
+
+	case 0b111010: {
+		// swc2 $cop2_datat, imm($rs)
+		u32 addr = reg[regs(instr)] + immsign(instr);
+		memory->write32(addr, gte->getData(regt(instr)));
 		break;
 	}
 

@@ -454,6 +454,18 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x72:
 			sprintf(res, "CdRemove()");
 			break;
+		case 0x78:
+			sprintf(res, "CdAsyncSeekL(0x%08x)", reg[4]);
+			break;
+		case 0x7C:
+			sprintf(res, "CdAsyncGetStatus(dst=0x%08x)", reg[4]);
+			break;
+		case 0x7E:
+			sprintf(res, "CdAsyncReadSector(count=0x%x,dst=0x%08x,mode=0x%x)", reg[4], reg[5], reg[6]);
+			break;
+		case 0x95:
+			sprintf(res, "CdInitSubFunc()");
+			break;
 		case 0x96:
 			sprintf(res, "AddCDROMDevice()");
 			break;
@@ -462,6 +474,13 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 			break;
 		case 0x99:
 			sprintf(res, "AddDummyTtyDevice()");
+			break;
+		case 0xA1:
+			sprintf(res, "SystemErrorBootOrDiskFailure(type=0x%x,errorcode=0x%x)", reg[4], reg[5]);
+			throw_error("SystemErrorBootOrDiskFailure");
+			break;
+		case 0xA2:
+			sprintf(res, "EnqueueCdIntr()");
 			break;
 		case 0xA3:
 			sprintf(res, "DequeueCdIntr()");
@@ -523,6 +542,9 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 			break;
 		case 0x20:
 			sprintf(res, "UnDeliverEvent(0x%08x,0x%x)", reg[4], reg[5]);
+			break;
+		case 0x32:
+			sprintf(res, "FileOpen(filename=0x%08x,accessmode=0x%x)", reg[4], reg[5]);
 			break;
 		case 0x3D:
 			//sprintf(res, "std_out_putchar(%c)", (u8)reg[4]);

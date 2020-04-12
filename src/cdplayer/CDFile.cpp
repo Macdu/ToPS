@@ -49,6 +49,6 @@ void CDFile::loadSector()
 	fread(data, sizeof(u8), sector_file_size, file);
 
 	// we don't give back the header informations
-	currPos = (sector_file_size == 0x800) ? 24 : 12;
+	currPos = (sector_end == 0x800) ? 24 : 12;
 	if (Debugging::cd)printf("CD: Sector read : 0x%x\n", sector);
 }

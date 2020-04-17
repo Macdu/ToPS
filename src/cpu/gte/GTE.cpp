@@ -292,13 +292,13 @@ u32 GTE::getControl(u32 reg)
 {
 	switch (reg & 0x1F) {
 	case 0:
-		return (u32)(u16)rotation[0][0] | ((u32)(u16)rotation[0][1] << 16);
+		return (u32)(u16)rotation[0][0] | ((u32)(u16)rotation[1][0] << 16);
 	case 1:
-		return (u32)(u16)rotation[0][2] | ((u32)(u16)rotation[1][0] << 16);
+		return (u32)(u16)rotation[2][0] | ((u32)(u16)rotation[0][1] << 16);
 	case 2:
-		return (u32)(u16)rotation[1][1] | ((u32)(u16)rotation[1][2] << 16);
+		return (u32)(u16)rotation[1][1] | ((u32)(u16)rotation[2][1] << 16);
 	case 3:
-		return (u32)(u16)rotation[2][0] | ((u32)(u16)rotation[2][1] << 16);
+		return (u32)(u16)rotation[0][2] | ((u32)(u16)rotation[1][2] << 16);
 	case 4:
 		return (u32)(i32)rotation[2][2];
 	case 5:
@@ -308,13 +308,13 @@ u32 GTE::getControl(u32 reg)
 	case 7:
 		return (u32)translation.z;
 	case 8:
-		return (u32)(u16)light[0][0] | ((u32)(u16)light[0][1] << 16);
+		return (u32)(u16)light[0][0] | ((u32)(u16)light[1][0] << 16);
 	case 9:
-		return (u32)(u16)light[0][2] | ((u32)(u16)light[1][0] << 16);
+		return (u32)(u16)light[2][0] | ((u32)(u16)light[0][1] << 16);
 	case 10:
-		return (u32)(u16)light[1][1] | ((u32)(u16)light[1][2] << 16);
+		return (u32)(u16)light[1][1] | ((u32)(u16)light[2][1] << 16);
 	case 11:
-		return (u32)(u16)light[2][0] | ((u32)(u16)light[2][1] << 16);
+		return (u32)(u16)light[0][2] | ((u32)(u16)light[1][2] << 16);
 	case 12:
 		return (u32)(i32)light[2][2];
 	case 13:
@@ -324,13 +324,13 @@ u32 GTE::getControl(u32 reg)
 	case 15:
 		return (u32)backgroundColor.b;
 	case 16:
-		return (u32)(u16)lightColor[0][0] | ((u32)(u16)lightColor[0][1] << 16);
+		return (u32)(u16)lightColor[0][0] | ((u32)(u16)lightColor[1][0] << 16);
 	case 17:
-		return (u32)(u16)lightColor[0][2] | ((u32)(u16)lightColor[1][0] << 16);
+		return (u32)(u16)lightColor[2][0] | ((u32)(u16)lightColor[0][1] << 16);
 	case 18:
-		return (u32)(u16)lightColor[1][1] | ((u32)(u16)lightColor[1][2] << 16);
+		return (u32)(u16)lightColor[1][1] | ((u32)(u16)lightColor[2][1] << 16);
 	case 19:
-		return (u32)(u16)lightColor[2][0] | ((u32)(u16)lightColor[2][1] << 16);
+		return (u32)(u16)lightColor[0][2] | ((u32)(u16)lightColor[1][2] << 16);
 	case 20:
 		return (u32)(i32)lightColor[2][2];
 	case 21:
@@ -365,19 +365,19 @@ void GTE::setControl(u32 reg, u32 val)
 	switch (reg & 0x1F) {
 	case 0:
 		rotation[0][0] = (i16)val;
-		rotation[0][1] = (i16)(val >> 16);
+		rotation[1][0] = (i16)(val >> 16);
 		break;
 	case 1:
-		rotation[0][2] = (i16)val;
-		rotation[1][0] = (i16)(val >> 16);
+		rotation[2][0] = (i16)val;
+		rotation[0][1] = (i16)(val >> 16);
 		break;
 	case 2:
 		rotation[1][1] = (i16)val;
-		rotation[1][2] = (i16)(val >> 16);
+		rotation[2][1] = (i16)(val >> 16);
 		break;
 	case 3:
-		rotation[2][0] = (i16)val;
-		rotation[2][1] = (i16)(val >> 16);
+		rotation[0][2] = (i16)val;
+		rotation[1][2] = (i16)(val >> 16);
 		break;
 	case 4:
 		rotation[2][2] = (i16)val;
@@ -393,19 +393,19 @@ void GTE::setControl(u32 reg, u32 val)
 		break;
 	case 8:
 		light[0][0] = (i16)val;
-		light[0][1] = (i16)(val >> 16);
+		light[1][0] = (i16)(val >> 16);
 		break;
 	case 9:
-		light[0][2] = (i16)val;
-		light[1][0] = (i16)(val >> 16);
+		light[2][0] = (i16)val;
+		light[0][1] = (i16)(val >> 16);
 		break;
 	case 10:
 		light[1][1] = (i16)val;
-		light[1][2] = (i16)(val >> 16);
+		light[2][1] = (i16)(val >> 16);
 		break;
 	case 11:
-		light[2][0] = (i16)val;
-		light[2][1] = (i16)(val >> 16);
+		light[0][2] = (i16)val;
+		light[1][2] = (i16)(val >> 16);
 		break;
 	case 12:
 		light[2][2] = (i16)val;
@@ -421,19 +421,19 @@ void GTE::setControl(u32 reg, u32 val)
 		break;
 	case 16:
 		lightColor[0][0] = (i16)val;
-		lightColor[0][1] = (i16)(val >> 16);
+		lightColor[1][0] = (i16)(val >> 16);
 		break;
 	case 17:
-		lightColor[0][2] = (i16)val;
-		lightColor[1][0] = (i16)(val >> 16);
+		lightColor[2][0] = (i16)val;
+		lightColor[0][1] = (i16)(val >> 16);
 		break;
 	case 18:
 		lightColor[1][1] = (i16)val;
-		lightColor[1][2] = (i16)(val >> 16);
+		lightColor[2][1] = (i16)(val >> 16);
 		break;
 	case 19:
-		lightColor[2][0] = (i16)val;
-		lightColor[2][1] = (i16)(val >> 16);
+		lightColor[0][2] = (i16)val;
+		lightColor[1][2] = (i16)(val >> 16);
 		break;
 	case 20:
 		lightColor[2][2] = (i16)val;

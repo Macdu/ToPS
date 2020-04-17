@@ -51,6 +51,7 @@ public:
 
 	void textured4Points();
 	void monochrome4Points();
+	void monochromeTriangle();
 	void shaded4points();
 	void shadedTriangle();
 	void rectangle();

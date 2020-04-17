@@ -13,6 +13,8 @@ void GPU::initGP0Opcodes()
 	gp0_opcodes_length[0x01] = 1;
 	gp0_opcodes_length[0x02] = 3;
 
+	gp0_opcodes_length[0x20] = 4;
+
 	gp0_opcodes_length[0x2C] = 9;
 	gp0_opcodes_length[0x2D] = 9;
 	gp0_opcodes_length[0x2F] = 9;
@@ -251,6 +253,11 @@ void GPU::gp0(u32 cmd, u32 opcode)
 	case 0x02:
 		// frame buffer rectangle draw
 		rectangleDraw();
+		break;
+
+	case 0x20:
+		// monochrome 3 point
+		monochromeTriangle();
 		break;
 
 	case 0x28:
@@ -536,6 +543,21 @@ void GPU::monochrome4Points()
 	}
 	if(Debugging::gpu)printf("GPU : Draw monochrome 4-points : (%d,%d) (%d,%d)\n",
 		vertices[0].x, vertices[0].y, vertices[3].x, vertices[3].y);
+}
+
+void GPU::monochromeTriangle()
+{
+	Point<i16> vertices[3];
+	Color color = readColor();
+
+	vertices[0] = readPoint();
+	vertices[1] = readPoint();
+	vertices[2] = readPoint();
+	for (int i = 0; i < 3; i++) {
+		pushVertexColor(vertices[i], color);
+	}
+	if (Debugging::gpu)printf("GPU : Draw monochrome 3-points : (%d,%d) (%d,%d)\n",
+		vertices[0].x, vertices[0].y, vertices[2].x, vertices[2].y);
 }
 
 void GPU::shaded4points()

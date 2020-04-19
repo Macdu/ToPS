@@ -546,6 +546,12 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x32:
 			sprintf(res, "FileOpen(filename=0x%08x,accessmode=0x%x)", reg[4], reg[5]);
 			break;
+		case 0x34:
+			sprintf(res, "FileRead(fd=%d,dst=0x%08x,length=0x%x)", reg[4], reg[5], reg[6]);
+			break;
+		case 0x36:
+			sprintf(res, "FileClose(fd=%d)", reg[4]);
+			break;
 		case 0x3D:
 			//sprintf(res, "std_out_putchar(%c)", (u8)reg[4]);
 			break;

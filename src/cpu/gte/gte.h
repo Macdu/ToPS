@@ -8,6 +8,32 @@
 
 typedef glm::tmat3x3<i64> Matrix;
 
+// all the flags that can be set when using GTE cmds
+enum struct GTEFlags : u32 {
+	IR0Overflow = 1 << 12,
+	SY2Overflow = 1 << 13,
+	SX2Overflow = 1 << 14,
+	MAC0NegativeOverflow = 1 << 15,
+	MAC0PositiveOverflow = 1 << 16,
+	// happens on RTPS
+	DivideOverflow = 1 << 17,
+	SZ3Overflow = 1 << 18,
+	BlueOverflow = 1 << 19,
+	GreenOverflow = 1 << 20,
+	RedOverflow = 1 << 21,
+	// saturated to +0000h..+7FFFh (lm=1) or to -8000h..+7FFFh (lm=0)
+	IR3Overflow = 1 << 22,
+	IR2Overflow = 1 << 23,
+	IR1Overflow = 1 << 24,
+	MAC3NegativeOverflow = 1 << 25,
+	MAC2NegativeOverflow = 1 << 26,
+	MAC1NegativeOverflow = 1 << 27,
+	MAC3PositiveOverflow = 1 << 28,
+	MAC2PositiveOverflow = 1 << 29,
+	MAC1PositiveOverflow = 1 << 30,
+	// bit 31 is (Bit30..23, and 18..13 ORed together)
+};
+
 // Implements the PS1 GTE (geometry transformation engine)
 // which does all the 3D computations (the gpu only handles 2D drawing)
 class GTE {
@@ -76,11 +102,23 @@ private:
 
 		u32 val;
 	} tempCmd;
+
+	// fast, but less accurate division mechanism (based on Unsigned Newton-Raphson (UNR) algorithm)
+	// Returns (((H*20000h/SZ3)+1)/2) 
+	u32 unrDivision();
 	void rtps(int i);
 	void rtpt();
 	void nclip();
+	void ncs(int i);
 	void ncds(int i);
 	void avsz3();
+
+	// tools for flag handling
+	// check this vector for saturation flags
+	// then set mac and ir accordingly
+	void checkVector(glm::i64vec3 vec);
+	inline void setMacIr(int i, i64 val);
+	inline i64 saturate(i64 val,i64 max, GTEFlags overflow,i64 min, GTEFlags underflow);
 
 public:
 	u32 getData(u32 reg);

@@ -88,20 +88,22 @@ private:
 	// store temporary the cmd sent to the gte
 	union {
 		struct {
-			u8 cmd : 6;
-			emptyBit _useless0 : 4;
-			bool saturateIR : 1;
-			emptyBit _useless1 : 2;
-			u8 translationVec : 2;
-			u8 multiplyVec : 2;
-			u8 multiplyMat : 2;
-			bool shiftIR : 1;
-			u8 fakeGTE : 5;
-			emptyBit _useless2 : 7;
+			u32 cmd : 6;
+			u32 : 4;
+			u32 saturateIR : 1;
+			u32 : 2;
+			u32 translationVec : 2;
+			u32 multiplyVec : 2;
+			u32 multiplyMat : 2;
+			u32 shiftIR : 1;
+			u32 fakeGTE : 5;
+			u32 : 7;
 		} content;
 
 		u32 val;
 	} tempCmd;
+
+	static_assert(sizeof(tempCmd) == sizeof(u32));
 
 	// fast, but less accurate division mechanism (based on Unsigned Newton-Raphson (UNR) algorithm)
 	// Returns (((H*20000h/SZ3)+1)/2) 

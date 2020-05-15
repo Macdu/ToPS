@@ -82,6 +82,8 @@ private:
 		u16 val;
 	} counterModes[3];
 
+	static_assert(sizeof(counterModes[0]) == sizeof(u16));
+
 	// specify if the timer is paused
 	bool isPaused[3];
 

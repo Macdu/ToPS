@@ -37,20 +37,22 @@ private:
 	union 
 	{
 		struct {
-			bool isTransferReadyOrStarted : 1;
-			bool isFifoNotEmpty : 1;
-			bool isTransferReadyOrFinished : 1;
-			bool hasRXParityError : 1;
-			bool _useless1 : 3;
-			bool isACKInputLow : 1;
-			bool hasIRQ7 : 1;
-			bool _useless2 : 1;
+			u32 isTransferReadyOrStarted : 1;
+			u32 isFifoNotEmpty : 1;
+			u32 isTransferReadyOrFinished : 1;
+			u32 hasRXParityError : 1;
+			u32 _useless1 : 3;
+			u32 isACKInputLow : 1;
+			u32 hasIRQ7 : 1;
+			u32 _useless2 : 1;
 			// 21bit timer, decrementing at 33MHz
 			u32 baudrateTimer : 21; 
 		} content;
 
 		u32 val;
 	} joyStat;
+
+	static_assert(sizeof(joyStat) == sizeof(u32));
 
 	// JOY_MOD 16 bit register, at 0x1F801048
 	union {
@@ -67,6 +69,8 @@ private:
 
 		u16 val;
 	} joyMode;
+
+	static_assert(sizeof(joyMode) == sizeof(u16));
 
 	// JOY_CTRL 16 bit register, at 0x1F80104A
 	union
@@ -93,6 +97,8 @@ private:
 		u16 val;
 	} joyControl;
 
+	static_assert(sizeof(joyControl) == sizeof(u16));
+
 	// contains the state of all button on the gamepad (0=released, 1=pushed)
 	union
 	{
@@ -116,6 +122,8 @@ private:
 
 		u16 val;
 	} controllerState;
+
+	static_assert(sizeof(controllerState) == sizeof(u16));
 
 	// byte to be sent when transfer enabled
 	u8 transferBuffer;

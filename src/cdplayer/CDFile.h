@@ -37,6 +37,9 @@ private:
 	FILE* file;
 
 	u32 fileSize;
+
+	// The offset from the beginning of the sector (12 or 24 bytes containing channel or subchannel info)
+	u32 sectorOffset;
 	u32 sector;
 	u32 currPos;
 	bool needReload;

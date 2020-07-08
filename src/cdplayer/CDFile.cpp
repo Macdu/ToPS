@@ -32,13 +32,13 @@ u8 CDFile::getData()
 	// if we seeked to another place or read the whole sector
 	if (needReload || currPos >= sector_end)
 		loadSector();
-	return data[currPos++];
+	return data[sectorOffset + currPos++];
 }
 
 void CDFile::loadSector()
 {
 	// if we read all of the sector, go to the next one
-	if (currPos >= sector_end) {
+	if (!needReload && currPos >= sector_end) {
 		sector++;
 	}
 	currPos = 0;
@@ -49,6 +49,6 @@ void CDFile::loadSector()
 	fread(data, sizeof(u8), sector_file_size, file);
 
 	// we don't give back the header informations
-	currPos = (sector_end == 0x800) ? 24 : 12;
+	sectorOffset = (sector_end == 0x800) ? 24 : 12;
 	if (Debugging::cd)printf("CD: Sector read : 0x%x\n", sector);
 }

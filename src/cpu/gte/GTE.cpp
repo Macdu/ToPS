@@ -58,7 +58,11 @@ u32 GTE::unrDivision()
 	u32 val = tableUNR[(sz3 - 0x7FC0) >> 7] + 0x101;;
 	u32 tmp = (0x2000080 - (sz3 * val)) >> 8;
 	tmp = (0x80 + (tmp * val)) >> 8;
-	res = std::min<u64>(0x1FFFF, ((res * tmp) + 0x8000) >> 16);
+	res = ((res * tmp) + 0x8000) >> 16;
+	if (res > 0x1FFFF) {
+		flag |= (u32)GTEFlags::DivideOverflow;
+		return 0x1FFFF;
+	}
 	return res;
 
 }
@@ -87,9 +91,13 @@ void GTE::rtps(int i)
 	screen[3].z = saturate(res.z >> 12, 0xFFFF, GTEFlags::SZ3Overflow, 0, GTEFlags::SZ3Overflow);
 
 	i64 planeComp = unrDivision();
-	screen[2].x = saturate((planeComp * ir[1] + screenOffset.x) >> 16, 0x3FF, GTEFlags::SX2Overflow,
+	i64 x = saturate(planeComp * ir[1] + screenOffset.x,
+		(1LL << 31) - 1, GTEFlags::MAC0PositiveOverflow, -(1LL << 31), GTEFlags::MAC0NegativeOverflow);
+	screen[2].x = saturate(x >> 16, 0x3FF, GTEFlags::SX2Overflow,
 		-0x400, GTEFlags::SX2Overflow);
-	screen[2].y = saturate((planeComp * ir[2] + screenOffset.y) >> 16, 0x3FF, GTEFlags::SY2Overflow,
+	i64 y = saturate(planeComp * ir[2] + screenOffset.y,
+		(1LL << 31) - 1, GTEFlags::MAC0PositiveOverflow, -(1LL << 31), GTEFlags::MAC0NegativeOverflow);
+	screen[2].y = saturate(y >> 16, 0x3FF, GTEFlags::SY2Overflow,
 		-0x400, GTEFlags::SY2Overflow);
 
 	setMacIr(0, planeComp * depthQueingCoeff + depthQueingOffset);

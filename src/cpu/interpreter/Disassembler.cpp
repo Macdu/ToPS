@@ -405,8 +405,14 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x17:
 			sprintf(res, "strcmp(0x%08x,0x%08x)", reg[4], reg[5] );
 			break;
+		case 0x18:
+			sprintf(res, "strcmp(0x%08x,0x%08x, maxlen=%d)", reg[4], reg[5], reg[6]);
+			break;
 		case 0x19:
 			sprintf(res, "strcpy(0x%08x,0x%08x)", reg[4], reg[5]);
+			break;
+		case 0x1A:
+			sprintf(res, "strncpy(dst=0x%08x,src=0x%08x,maxlen=%d)", reg[4], reg[5], reg[6]);
 			break;
 		case 0x1B:
 			sprintf(res, "strlen(0x%08x)", reg[4]);

@@ -128,6 +128,13 @@ private:
 		u8 val;
 	} cdMode;
 
+	// filter used when reading audio,
+	// ignores sector if its file and channel are different from the filter one
+	struct {
+		u8 file;
+		u8 channel;
+	} filter;
+
 	std::queue<u8> parameterQueue;
 
 	u64 responseClock;
@@ -192,6 +199,7 @@ private:
 	void cmdStop();
 	void cmdInit();
 	void cmdDemute();
+	void cmdSetFilter();
 	void cmdSetLoc();
 	void cmdSeekL();
 	void cmdRead();

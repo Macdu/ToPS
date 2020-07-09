@@ -21,8 +21,11 @@ void CDPlayer::sendCommand(u8 cmd)
 	case 0x0A:
 		cmdInit();
 		break;
-	case 0x0c:
+	case 0x0C:
 		cmdDemute();
+		break;
+	case 0x0D:
+		cmdSetFilter();
 		break;
 	case 0x0E:
 		cmdSetMode();
@@ -35,6 +38,9 @@ void CDPlayer::sendCommand(u8 cmd)
 		break;
 	case 0x1A:
 		cmdGetID();
+		break;
+	case 0x1B:
+		cmdRead();
 		break;
 	default:
 		printf("Unknown CD cmd : %02x\n", cmd);
@@ -141,6 +147,18 @@ void CDPlayer::cmdDemute()
 	sendINT3Stat();
 	cdMode.content.allowCDA = true;
 	cdMode.content.sendXA_ADPCM = true;
+}
+
+void CDPlayer::cmdSetFilter()
+{
+	filter.file = parameterQueue.front();
+	parameterQueue.pop();
+	filter.channel = parameterQueue.front();
+	parameterQueue.pop();
+	if (Debugging::cd)printf("CD: SetFilter (file=%x, channel=%x)\n",
+		filter.file, filter.channel);
+
+	sendINT3Stat();
 }
 
 void CDPlayer::cmdSetLoc()

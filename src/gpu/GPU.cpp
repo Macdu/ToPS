@@ -452,6 +452,18 @@ void GPU::gp1(u32 cmd)
 		u32 retVal;
 		// GPU info
 		switch (cmd & ((1 << 24) - 1)) {
+		case 3:
+			// drawAreaTopLeft
+			retVal = gpuProps.drawingAreaLeft | (gpuProps.drawingAreaTop << 10);
+			break;
+		case 4:
+			// drawAreaBottomRight
+			retVal = gpuProps.drawingAreaRight | (gpuProps.drawingAreaBottom << 10);
+			break;
+		case 5:
+			// drawAreaOffset
+			retVal = (gpuProps.drawingOffset.x & 0x7FF) | ((gpuProps.drawingOffset.y & 0x7FF) << 11);
+			break;
 		case 7:
 			// GPU Type
 			// no$cash says it should be 2

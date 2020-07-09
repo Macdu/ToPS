@@ -531,6 +531,12 @@ void SceneRendering::transferImage(u16* image, Point<i16> topLeft, Point<i16> ex
 	// can't see anything else right now than to render what was previously sent
 	// no renderFinished semaphore needs to be emitted in this case
 	renderVertices(false);
+
+	// fix right now to prevent vulkan from crashing
+	// normally, the copy should be made modulo the extent of the framebuffer
+	extent.x = std::min<i16>(extent.x, 1024 - topLeft.x);
+	extent.y = std::min<i16>(extent.y, 512 - topLeft.y);
+
 	// and we still need to copy the image from the readImage to the renderImage
 	verticesToRenderSize = 6;
 	verticesRenderScissors.resize(1);

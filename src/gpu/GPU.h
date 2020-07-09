@@ -34,7 +34,7 @@ public:
 	u32 getHorizontalRes();
 
 	inline void pushVertexColor(const Point<i16>& point,const Color& color);
-	inline void pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc,
+	inline void pushVertexTexture(const Point<i16>& point, const Point<i16>& textLoc,
 		const u16& clutId, const u16& textPage);
 	void drawFrame();
 
@@ -94,12 +94,12 @@ private:
 		return { (u8)word, (u8)(word >> 8), (u8)(word >> 16) };
 	}
 
-	inline Point<u8> extractTextLoc(const u32& word) {
-		return { (u8)word, (u8)(word >> 8) };
+	inline Point<i16> extractTextLoc(const u32& word) {
+		return { (i16)(u8)word, (i16)(u8)(word >> 8) };
 	}
 
 	// get the 4 points of a rectangle from the topLeft point, the width and the height
-	template<typename T> inline std::array<Point<T>,4> getRectangle(Point<T> topLeft, Point<T> size) {
+	template<typename T> std::array<Point<T>,4> getRectangle(Point<T> topLeft, Point<T> size) {
 		auto add = std::plus<T>();
 		return {
 			topLeft,

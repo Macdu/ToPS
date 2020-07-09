@@ -184,7 +184,7 @@ inline void GPU::pushVertexColor(const Point<i16>& point,const Color & color)
 	};
 }
 
-inline void GPU::pushVertexTexture(const Point<i16>& point, const Point<u8>& textLoc, const u16& clutId, const u16& textPage)
+inline void GPU::pushVertexTexture(const Point<i16>& point, const Point<i16>& textLoc, const u16& clutId, const u16& textPage)
 {
 	renderer.sceneRendering
 		.verticesToRender[renderer.sceneRendering.verticesToRenderSize++] =
@@ -511,7 +511,7 @@ void GPU::rectangleDraw()
 void GPU::textured4Points()
 {
 	Point<i16> vertices[4];
-	Point<u8> textLocs[4];
+	Point<i16> textLocs[4];
 	u16 clutID;
 	u16 textPage;
 	u32 word;
@@ -676,7 +676,7 @@ void GPU::sprite(i16 side)
 {
 	Point<i16> topLeft;
 	Point<i16> size;
-	Point<u8> textLoc;
+	Point<i16> textLoc;
 	u16 clutID;
 	u32 word;
 	// Command + color
@@ -694,7 +694,7 @@ void GPU::sprite(i16 side)
 		size = { side, side };
 	}
 	std::array<Point<i16>, 4> vertices = getRectangle(topLeft, size);
-	std::array<Point<u8>, 4> textLocs = getRectangle<u8>(textLoc, { (u8)size.x, (u8)size.y });
+	std::array<Point<i16>, 4> textLocs = getRectangle(textLoc, size);
 
 	for (int i = 0; i < 3; i++) {
 		pushVertexTexture(vertices[i], textLocs[i], clutID, gpuProps.texturePageDefault);

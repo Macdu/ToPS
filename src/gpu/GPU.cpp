@@ -22,7 +22,10 @@ void GPU::initGP0Opcodes()
 	gp0_opcodes_length[0x30] = 6;
 	gp0_opcodes_length[0x38] = 8;
 
+	gp0_opcodes_length[0x40] = 3;
+
 	gp0_opcodes_length[0x60] = 3;
+	gp0_opcodes_length[0x62] = 3;
 	gp0_opcodes_length[0x64] = 4;
 	gp0_opcodes_length[0x65] = 4;
 	gp0_opcodes_length[0x68] = 2;
@@ -230,6 +233,9 @@ void GPU::pushCmdGP0(u32 val)
 		// we have a full command, we can empty the buffer
 		if(gp0_opcodes_length[opcode] == 1)gp0Queue.pop();
 		gp0(cmd, opcode);
+		if (gp0Queue.size() != 0) {
+			printf("A gp0 command left the buffer not empty!\n");
+		}
 
 		// for now we can empty the buffer after
 		//while (!gp0Queue.empty())
@@ -290,8 +296,18 @@ void GPU::gp0(u32 cmd, u32 opcode)
 		shaded4points();
 		break;
 
+	case 0x40:
+		// monochrome line
+		line();
+		break;
+
 	case 0x60:
 		// rectangle
+		rectangle();
+		break;
+
+	case 0x62:
+		// semi-transparent rectangle
 		rectangle();
 		break;
 
@@ -630,6 +646,18 @@ void GPU::rectangle()
 	}
 	if (Debugging::gpu)printf("GPU : Draw rectangle (%d,%d) [%d,%d]\n",
 		topLeft.x, topLeft.y, size.x, size.y);
+}
+
+void GPU::line()
+{
+	Color color = readColor();
+	Point<i16> start = readPoint();
+	Point<i16> end = readPoint();
+
+	if (Debugging::gpu)printf("GPU : Draw line (%d,%d) -> (%d,%d)\n",
+		start.x, start.y, end.x, end.y);
+
+	// not implemented yet
 }
 
 void GPU::dot()

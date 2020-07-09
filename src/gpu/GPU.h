@@ -55,6 +55,7 @@ public:
 	void shaded4points();
 	void shadedTriangle();
 	void rectangle();
+	void line();
 	void dot();
 	// calling it with side=0 makes this function reads the width and height from gp0 parameters
 	void sprite(i16 side);

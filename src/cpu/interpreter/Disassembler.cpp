@@ -432,6 +432,9 @@ std::string Disassembler::biosCall(u32 addr, u32* reg)
 		case 0x2F:
 			//sprintf(res, "rand()");
 			break;
+		case 0x30:
+			sprintf(res, "srand(seed=%x)", reg[4]);
+			break;
 		case 0x33:
 			sprintf(res, "malloc(0x%x)", reg[4]);
 			break;

@@ -38,6 +38,8 @@ void Controller::sendTransferBuffer()
 	assert(joyControl.content.isTransferEnabled);
 	isTransferBufferFilled = false;
 	isExchanging = true;
+	joyStat.content.isACKInputLow = true;
+
 	if (receptionBuffer.empty()) {
 		// start new emission
 		if (transferBuffer == 0x01 && !joyControl.content.isSecondPad) {
@@ -58,8 +60,13 @@ void Controller::sendTransferBuffer()
 		else {
 			// return some default value
 			receptionBuffer.push(0xFF);
+			// the controller does not acknowledge it
+			joyStat.content.isACKInputLow = false;
 		}
 	}
+
+	joyStat.content.isACKInputLow = true;
+
 	// waits 400 cpu cycles before setting an IRQ
 	// it is necessary to wait because this behavior is expected by the BIOS
 	nextCycleIRQ = (*clockCycle) + 400;
@@ -81,6 +88,8 @@ void Controller::checkIRQ()
 		nextCycleIRQ = std::numeric_limits<u64>::max();
 		// we have a byte in the FIFO
 		joyStat.content.isFifoNotEmpty = true;
+		// not acknowledged anymore
+		joyStat.content.isACKInputLow = false;
 		if (receptionBuffer.size() != 1 && !joyStat.content.hasIRQ7 && joyControl.content.isACKInterruptEnabled) {
 			// if the previous IRQ was acknowledged and IRQ are enabled
 			joyStat.content.hasIRQ7 = true;
@@ -94,7 +103,7 @@ u8 Controller::readData()
 	if (receptionBuffer.size() == 0 || !joyStat.content.isFifoNotEmpty) {
 		// the program makes sure the reception buffer is flushed
 		// (I think)
-		return 0;
+		return 0xFF;
 	}
 	// Suppose there is only one byte at a time in the FIFO
 	joyStat.content.isFifoNotEmpty = false;

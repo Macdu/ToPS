@@ -85,7 +85,14 @@ private:
 	inline Point<i16> readPoint() {
 		u32 word = gp0Queue.front();
 		gp0Queue.pop();
-		return { static_cast<i16>(word), static_cast<i16>(word >> 16) };
+		// signed 11bit to 16bit expansion
+		i16 x = word & 0x7FF;
+		x <<= 5;
+		x >>= 5;
+		i16 y = (word >> 16) & 0xFF;
+		y <<= 5;
+		y >>= 5;
+		return { x, y };
 	}
 	
 	inline Color readColor() {
